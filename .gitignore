@@ -27,3 +27,6 @@ dist-ssr
 .env.*
 build*.txt
 
+!.env.example
+!backend/.env.example
+
