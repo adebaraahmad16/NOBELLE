@@ -1,0 +1,579 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    color: #2D2D2D;
+    background-color: #FFFFFF;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', Georgia, serif;
+    line-height: 1.2;
+    font-weight: 600;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  button {
+    cursor: pointer;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  input, textarea, select {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .container-custom {
+    @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .section-padding {
+    @apply py-16 sm:py-20 lg:py-24;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-8 py-3.5 bg-brand-red text-white font-medium text-sm tracking-wider uppercase transition-all duration-300 hover:bg-brand-red-dark hover:shadow-lg hover:shadow-brand-red/20 active:scale-[0.98];
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-8 py-3.5 border-2 border-brand-charcoal text-brand-charcoal font-medium text-sm tracking-wider uppercase transition-all duration-300 hover:bg-brand-charcoal hover:text-white active:scale-[0.98];
+  }
+
+  .btn-outline-white {
+    @apply inline-flex items-center justify-center px-8 py-3.5 border-2 border-white text-white font-medium text-sm tracking-wider uppercase transition-all duration-300 hover:bg-white hover:text-brand-charcoal active:scale-[0.98];
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 border border-brand-beige-dark bg-white text-brand-charcoal text-sm transition-all duration-300 focus:outline-none focus:border-brand-red focus:ring-1 focus:ring-brand-red/20 placeholder:text-brand-gray-light;
+  }
+
+  .product-card {
+    @apply relative bg-white overflow-hidden transition-all duration-400;
+  }
+
+  .product-card-image {
+    @apply relative overflow-hidden aspect-[3/4];
+  }
+
+  .product-card-image img {
+    @apply w-full h-full object-cover transition-transform duration-700 group-hover:scale-105;
+  }
+
+  .section-title {
+    @apply font-serif text-3xl sm:text-4xl lg:text-5xl text-brand-charcoal;
+  }
+
+  .section-subtitle {
+    @apply text-brand-gray text-sm sm:text-base tracking-wider uppercase mt-3;
+  }
+
+  .overlay-gradient {
+    @apply absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent;
+  }
+
+  /* ─── Admin Luxury Components ─── */
+
+  /* Glass morphism surface */
+  .glass {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+  }
+
+  .glass-dark {
+    background: rgba(13, 13, 13, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  /* Gradient border card */
+  .gradient-border {
+    position: relative;
+    border-radius: 1.25rem;
+    background: white;
+  }
+
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(177,18,38,0.3), rgba(200,169,106,0.2), transparent);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+
+  /* Luxury stat card */
+  .luxury-stat-card {
+    position: relative;
+    border-radius: 1.25rem;
+    overflow: hidden;
+    transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .luxury-stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 24px 48px -8px rgba(0,0,0,0.14), 0 0 0 1px rgba(177,18,38,0.1);
+  }
+
+  html.dark .luxury-stat-card:hover {
+    box-shadow: 0 24px 48px -8px rgba(177,18,38,0.15), 0 0 0 1px rgba(177,18,38,0.2);
+  }
+
+  /* Premium card */
+  .premium-card {
+    background: var(--admin-surface, white);
+    border: 1px solid var(--admin-border, rgba(229, 213, 193, 0.6));
+    border-radius: 18px;
+    box-shadow: var(--shadow-card, 0 4px 16px rgba(0,0,0,0.04));
+    transition: box-shadow 0.28s ease, transform 0.28s ease;
+  }
+
+  html.dark .premium-card {
+    background: var(--admin-surface, #0F0F12);
+    border-color: var(--admin-border, rgba(177,18,38,0.12));
+    box-shadow: var(--shadow-card, 0 4px 16px rgba(0,0,0,0.25));
+  }
+
+  .premium-card:hover {
+    box-shadow: var(--shadow-card-hover, 0 8px 32px rgba(0,0,0,0.08));
+  }
+
+  /* Glass elevated surface */
+  .glass-elevated {
+    background: rgba(255,255,255,0.82);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255,255,255,0.5);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.7);
+  }
+
+  html.dark .glass-elevated {
+    background: rgba(15,15,18,0.88);
+    border: 1px solid rgba(177,18,38,0.1);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+
+  /* Admin tag / status chip */
+  .admin-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 7.5px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* Admin table row hover */
+  .admin-row-hover {
+    transition: background 0.18s ease, border-left-color 0.18s ease;
+    border-left: 3px solid transparent;
+  }
+
+  .admin-row-hover:hover {
+    background: rgba(177,18,38,0.025);
+    border-left-color: rgba(177,18,38,0.4);
+  }
+
+  html.dark .admin-row-hover:hover {
+    background: rgba(177,18,38,0.05);
+  }
+
+  /* Admin section divider */
+  .admin-divider {
+    border: none;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--admin-border, rgba(229,213,193,0.5)), transparent);
+    margin: 0;
+  }
+
+  /* Progress bar */
+  .admin-progress-track {
+    height: 6px;
+    border-radius: 99px;
+    background: rgba(229,213,193,0.45);
+    overflow: hidden;
+  }
+
+  html.dark .admin-progress-track {
+    background: rgba(177,18,38,0.08);
+  }
+
+  .admin-progress-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.8s cubic-bezier(0.16,1,0.3,1);
+  }
+
+  /* Admin section label */
+  .admin-section-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: rgba(200, 169, 106, 0.7);
+  }
+
+  /* Luxury badge */
+  .luxury-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 99px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* Quick action card */
+  .quick-action-card {
+    position: relative;
+    border-radius: 1.25rem;
+    overflow: hidden;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+  }
+
+  .quick-action-card:hover {
+    transform: translateY(-3px) scale(1.01);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.12);
+  }
+
+  /* Shine overlay on hover */
+  .shine-overlay {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.12) 50%, transparent 70%);
+    transform: translateX(-100%) rotate(45deg);
+    transition: transform 0.6s ease;
+    pointer-events: none;
+  }
+
+  .quick-action-card:hover .shine-overlay {
+    transform: translateX(100%) rotate(45deg);
+  }
+
+  /* Animated counter number */
+  .counter-number {
+    font-family: 'Outfit', 'Inter', system-ui, sans-serif;
+    font-feature-settings: 'tnum';
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .animate-on-scroll {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  }
+
+  .animate-on-scroll.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Numeric font */
+  .font-numeric {
+    font-family: 'Outfit', 'Inter', system-ui, sans-serif;
+  }
+}
+
+/* ─── Custom Scrollbar ─── */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(177, 18, 38, 0.2);
+  border-radius: 99px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(177, 18, 38, 0.4);
+}
+
+/* ─── Toast Notification ─── */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 9999;
+  animation: fadeInUp 0.4s ease-out, fadeOut 0.4s ease-out 2.6s forwards;
+}
+
+/* ─── Admin Toast (bottom-right premium) ─── */
+.admin-toast {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  background: #1a1a1a;
+  border: 1px solid rgba(177, 18, 38, 0.2);
+  box-shadow: 0 20px 48px rgba(0,0,0,0.35);
+  animation: notificationIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  min-width: 260px;
+}
+
+@keyframes notificationIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes fadeOut {
+  to { opacity: 0; transform: translateY(10px); }
+}
+
+/* ─── Sidebar shimmer for active items ─── */
+@keyframes sidebarGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(177,18,38,0); }
+  50% { box-shadow: 0 0 12px 2px rgba(177,18,38,0.15); }
+}
+
+/* ─── Logo shimmer sweep ─── */
+@keyframes logoShimmer {
+  0%   { transform: translateX(-100%) skewX(-15deg); }
+  100% { transform: translateX(250%) skewX(-15deg); }
+}
+
+/* ─── Live ping ring ─── */
+@keyframes livePing {
+  0%        { transform: scale(1);   opacity: 0.8; }
+  75%, 100% { transform: scale(2.2); opacity: 0;   }
+}
+
+/* ─── Tooltip enter ─── */
+@keyframes tooltipIn {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0);    }
+}
+.tooltip-enter { animation: tooltipIn 0.18s ease-out both; }
+
+/* ─── Border shimmer ─── */
+@keyframes borderShimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+/* ─── Animated gradient border ─── */
+@keyframes borderRotate {
+  from { background-position: 0% 50%; }
+  to { background-position: 100% 50%; }
+}
+
+/* ─── Page transition ─── */
+@keyframes adminPageIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.admin-page {
+  animation: adminPageIn 0.35s ease-out both;
+}
+
+/* ─── Skeleton shimmer ─── */
+@keyframes shimmerSlide {
+  0% { background-position: -800px 0; }
+  100% { background-position: 800px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0ede8 25%, #e8e3dc 50%, #f0ede8 75%);
+  background-size: 800px 100%;
+  animation: shimmerSlide 1.6s infinite;
+  border-radius: 8px;
+}
+
+html.dark .skeleton {
+  background: linear-gradient(90deg, #1a1a1a 25%, #222 50%, #1a1a1a 75%);
+  background-size: 800px 100%;
+}
+
+/* ─── Ripple Button ─── */
+.ripple-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(255,255,255,0.22) 1%, transparent 70%);
+  opacity: 0;
+  transform: scale(0);
+  transition: transform 0.5s, opacity 0.4s;
+}
+
+.ripple-btn:active::after {
+  transform: scale(4);
+  opacity: 1;
+  transition: 0s;
+}
+
+/* ─── Stat Card Hover ─── */
+.stat-card {
+  transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.09), 0 0 0 1px rgba(177,18,38,0.09);
+}
+
+html.dark .stat-card:hover {
+  box-shadow: 0 16px 40px rgba(177,18,38,0.12), 0 0 0 1px rgba(177,18,38,0.2);
+}
+
+/* ─── Quick card ─── */
+.quick-card {
+  transition: all 0.22s ease;
+}
+
+.quick-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(177,18,38,0.14);
+}
+
+/* ─── Sidebar transition ─── */
+.admin-sidebar-transition {
+  transition: width 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+
+.admin-content-transition {
+  transition: padding-left 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ─── Dark mode body ─── */
+html.dark body {
+  background: #0a0a0a;
+}
+
+/* ─── Welcome gradient animation ─── */
+@keyframes welcomeGradient {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.welcome-gradient {
+  background-size: 200% 200%;
+  animation: welcomeGradient 8s ease infinite;
+}
+
+/* ─── Floating orb animation ─── */
+@keyframes orbFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.4; }
+  33% { transform: translate(20px, -15px) scale(1.05); opacity: 0.6; }
+  66% { transform: translate(-10px, 10px) scale(0.97); opacity: 0.35; }
+}
+
+.orb-float {
+  animation: orbFloat 12s ease-in-out infinite;
+}
+
+/* ─── Sidebar card inner border glow ─── */
+.sidebar-card-glow {
+  box-shadow:
+    0 0 0 1px rgba(177,18,38,0.12),
+    0 28px 72px rgba(0,0,0,0.6),
+    0 0 80px rgba(177,18,38,0.03) inset;
+}
+
+/* ─── Glow pulse ─── */
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.55; transform: scale(1);    }
+  50%       { opacity: 1;   transform: scale(1.04); }
+}
+.glow-pulse { animation: glowPulse 2.4s ease-in-out infinite; }
+
+/* ─── Stat card (dark-mode aware) ─── */
+html.dark .luxury-stat-card {
+  background: var(--admin-surface, #0F0F12);
+  border-color: var(--admin-border, rgba(177,18,38,0.12));
+}
+
+html.dark .luxury-stat-card:hover {
+  box-shadow: 0 20px 52px rgba(177,18,38,0.12), 0 0 0 1px rgba(177,18,38,0.22);
+}
+
+/* ─── Quick action card dark mode ─── */
+html.dark .quick-action-card {
+  background: var(--admin-surface, #0F0F12);
+  border-color: var(--admin-border, rgba(177,18,38,0.1));
+}
+
+/* ─── Admin nav badge ─── */
+.admin-nav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 99px;
+  font-size: 8px;
+  font-weight: 700;
+  background: rgba(177,18,38,0.15);
+  color: #B11226;
+  margin-left: auto;
+}
