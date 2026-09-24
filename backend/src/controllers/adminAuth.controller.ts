@@ -41,4 +41,24 @@ export class AdminAuthController {
       next(error);
     }
   }
+
+  static async forgotPassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { email } = req.body;
+      const result = await AdminAuthService.forgotPassword(email);
+      return ApiResponse.success(res, result, 'If an admin account exists for that email, a reset link has been sent.');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async resetPassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { token, newPassword } = req.body;
+      await AdminAuthService.resetPassword(token, newPassword);
+      return ApiResponse.success(res, null, 'Password updated successfully.');
+    } catch (error) {
+      next(error);
+    }
+  }
 }

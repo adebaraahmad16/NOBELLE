@@ -59,7 +59,7 @@ export default function CategoriesPage() {
           <div className="container-custom text-center">
             <p className="font-serif text-2xl text-brand-charcoal mb-2">Our collections are being curated</p>
             <p className="text-brand-gray text-sm mb-8">
-              Categories will appear here once the NOBELLE team publishes the new catalog.
+              Ankara, Lace, Aso-Oke, and Occasion Wear categories will appear here once our team publishes the new NOBELLE catalog.
             </p>
             <Link to="/shop" className="btn-primary">Browse the Shop</Link>
           </div>
@@ -106,7 +106,7 @@ export default function CategoriesPage() {
               <div className="container-custom">
                 {categoryProducts.length === 0 ? (
                   <p className="text-center text-brand-gray text-sm py-8">
-                    No pieces in this category yet — new arrivals are on the way.
+                    No pieces in this category yet — new Ankara, Lace, and Occasion Wear arrivals are on the way.
                   </p>
                 ) : (
                   <>

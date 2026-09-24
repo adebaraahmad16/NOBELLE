@@ -72,6 +72,7 @@ model Admin {
 
   activityLogs ActivityLog[]
   refreshTokens RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model Customer {
@@ -508,6 +509,21 @@ model ContactMessage {
   message   String   @db.Text
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  userType  Role
+  adminId   String?
+  expiresAt DateTime
+  usedAt    DateTime?
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  admin Admin? @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
 }
 
 model ActivityLog {

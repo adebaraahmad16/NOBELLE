@@ -1,31 +1,53 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { adminAuthApi, getAdminUser, clearSession } from '../utils/api';
 
 const AdminAuthContext = createContext();
 
 export function AdminAuthProvider({ children }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return localStorage.getItem('nobelle_admin_auth') === 'true';
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState(() => adminAuthApi.hasSession());
+  const [admin, setAdmin] = useState(() => getAdminUser());
 
-  const login = (email, password) => {
-    // Mock validation: accept any email/password for now
-    if (email && password) {
-      setIsAuthenticated(true);
-      localStorage.setItem('nobelle_admin_auth', 'true');
-      localStorage.setItem('nobelle_admin_email', email);
-      return true;
-    }
-    return false;
+  // Re-verify session against the backend on mount if a token exists
+  useEffect(() => {
+    if (!adminAuthApi.hasSession()) return;
+    let cancelled = false;
+    adminAuthApi
+      .getMe()
+      .then((me) => {
+        if (!cancelled) setAdmin(me);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          clearSession();
+          setIsAuthenticated(false);
+          setAdmin(null);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const login = async (email, password, remember = false) => {
+    const data = await adminAuthApi.login(email, password, remember);
+    setIsAuthenticated(true);
+    setAdmin(data.admin);
+    return true;
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await adminAuthApi.logout();
+    } catch {
+      // session cleared locally regardless
+    }
+    clearSession();
     setIsAuthenticated(false);
-    localStorage.removeItem('nobelle_admin_auth');
-    localStorage.removeItem('nobelle_admin_email');
+    setAdmin(null);
   };
 
   return (
-    <AdminAuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AdminAuthContext.Provider value={{ isAuthenticated, admin, login, logout }}>
       {children}
     </AdminAuthContext.Provider>
   );

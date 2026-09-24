@@ -5,15 +5,19 @@ import {
   Card, PageHeader, PrimaryButton, GhostButton, Field, inputStyle, inputClass, useToast,
 } from '../../components/admin/ui/AdminUI';
 import { useAdminAuth } from '../../context/AdminAuthContext';
+import { getAdminIdentity } from '../../utils/api';
 
 export default function AdminProfilePage() {
   const navigate = useNavigate();
   const { logout } = useAdminAuth();
   const { pushToast, ToastViewport } = useToast();
 
-  const adminEmail = localStorage.getItem('nobelle_admin_email') || 'admin@nobelle.com';
+  const identity = getAdminIdentity();
+  const adminEmail = identity.email;
   const [profile, setProfile] = useState({
-    name: adminEmail.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+    name: identity.name !== 'Administrator'
+      ? identity.name
+      : (adminEmail ? adminEmail.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : ''),
     email: adminEmail,
     phone: localStorage.getItem('nobelle_admin_phone') || '',
     image: localStorage.getItem('nobelle_admin_image') || '',

@@ -276,9 +276,9 @@ export default function ShopPage() {
               </div>
             ) : activeProducts.length === 0 ? (
               <div className="text-center py-20">
-                <p className="font-serif text-2xl text-brand-charcoal mb-2">The collection is being prepared</p>
+                <p className="font-serif text-2xl text-brand-charcoal mb-2">Our collection is being curated</p>
                 <p className="text-brand-gray text-sm">
-                  Our new catalog is on its way. Please check back soon.
+                  New Ankara dresses, Lace gowns, and Occasion Wear are on their way. Please check back soon.
                 </p>
               </div>
             ) : (

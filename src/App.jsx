@@ -19,6 +19,8 @@ import { AdminDataProvider } from './context/AdminDataContext';
 
 import AdminLayout from './components/admin/AdminLayout';
 import AdminLoginPage from './pages/admin/AdminLoginPage';
+import AdminForgotPasswordPage from './pages/admin/AdminForgotPasswordPage';
+import AdminResetPasswordPage from './pages/admin/AdminResetPasswordPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminProductsPage from './pages/admin/AdminProductsPage';
 import AdminAddProductPage from './pages/admin/AdminAddProductPage';
@@ -84,8 +86,10 @@ function App() {
             <Router>
               <ScrollToTop />
               <Routes>
-                {/* Admin Public Login Route */}
+                {/* Admin Public Auth Routes */}
                 <Route path="/admin/login" element={<AdminLoginPage />} />
+                <Route path="/admin/forgot-password" element={<AdminForgotPasswordPage />} />
+                <Route path="/admin/reset-password" element={<AdminResetPasswordPage />} />
 
                 {/* Admin Protected Routes */}
                 <Route path="/admin" element={

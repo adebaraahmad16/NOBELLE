@@ -1,8 +1,9 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { getAdminUser } from '../utils/api';
 
 const AdminDataContext = createContext();
 
-const DATA_VERSION = 'nobelle_v3_empty_state';
+const DATA_VERSION = 'nobelle_v4_nigerian_fashion';
 
 function loadState(key, defaultValue) {
   const saved = localStorage.getItem(key);
@@ -99,12 +100,12 @@ export function AdminDataProvider({ children }) {
       heroTitle: '',
       heroSubtitle: '',
       heroImage: '',
-      heroTagline: '',
-      ctaText: 'Shop Now',
+      heroTagline: 'Modern Nigerian Women\'s Fashion',
+      ctaText: 'Shop Collection',
       ctaLink: '/shop',
       banners: [], // [{ id, title, subtitle, image, link }]
       featuredProductIds: [],
-      featuredCollectionTitle: 'Featured Collection',
+      featuredCollectionTitle: 'The Ankara Edit',
     },
     pages: {
       about: { title: 'About NOBELLE', content: '' },
@@ -152,7 +153,7 @@ export function AdminDataProvider({ children }) {
   };
 
   const addActivityLog = (action, details) => {
-    const email = localStorage.getItem('nobelle_admin_email') || 'admin@nobelle.com';
+    const email = getAdminUser()?.email || 'system';
     setActivityLogs((prev) => [
       { id: `log_${Date.now()}_${Math.random().toString(36).slice(2, 5)}`, user: email, action, details, timestamp: new Date().toISOString() },
       ...prev,

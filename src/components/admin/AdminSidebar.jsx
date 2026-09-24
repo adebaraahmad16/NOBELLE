@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import { useAdminData } from '../../context/AdminDataContext';
+import { getAdminIdentity } from '../../utils/api';
 import {
   LayoutDashboard, Package, FolderTree, Layers, Warehouse, ShoppingBag,
   Users, CreditCard, TicketPercent, Star, Truck, RotateCcw, Globe, BarChart3,
@@ -82,9 +83,10 @@ export default function AdminSidebar({ isOpen, setIsOpen }) {
 
   const unread = notifications.filter((n) => !n.read).length;
 
-  // Admin identity — real data only, falls back to "Administrator".
-  const adminName = localStorage.getItem('nobelle_admin_name') || 'Administrator';
-  const adminEmail = localStorage.getItem('nobelle_admin_email') || '';
+  // Admin identity — real session data only, falls back to "Administrator".
+  const identity = getAdminIdentity();
+  const adminName = identity.name;
+  const adminEmail = identity.email;
   const adminImage = localStorage.getItem('nobelle_admin_image') || '';
   const initials = adminName === 'Administrator'
     ? 'A'

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { ArrowRight, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { useProducts } from '../context/ProductContext';
 import { useAdminData } from '../context/AdminDataContext';
@@ -16,11 +16,42 @@ function AnimatedSection({ children, className = '' }) {
   );
 }
 
+// ── Nigerian Collections editorial strip ──────────────────────────────────
+const NIGERIAN_COLLECTIONS = [
+  {
+    id: 'ankara',
+    label: 'The Ankara Edit',
+    tagline: 'Bold prints. Beautiful silhouettes.',
+    image: '/images/ankara_edit_banner.jpg',
+    href: '/shop',
+  },
+  {
+    id: 'lace',
+    label: 'Lace Collection',
+    tagline: 'Elegance for every celebration.',
+    image: '/images/lace_collection_banner.jpg',
+    href: '/shop',
+  },
+  {
+    id: 'occasion',
+    label: 'Occasion Wear',
+    tagline: 'Made for celebrations that matter.',
+    image: '/images/occasion_wear_banner.jpg',
+    href: '/shop',
+  },
+  {
+    id: 'everyday',
+    label: 'Everyday Naija',
+    tagline: 'Stylish, effortless, authentically you.',
+    image: '/images/everyday_naija_banner.jpg',
+    href: '/shop',
+  },
+];
+
 export default function HomePage() {
   const { products } = useProducts();
   const { cms } = useAdminData();
   const home = cms?.homepage || {};
-  const [ref, isVisible] = useScrollAnimation();
 
   const activeProducts = products.filter((p) => p.status !== 'Draft' && p.status !== 'Archived');
   const featured = (home.featuredProductIds || [])
@@ -32,54 +63,113 @@ export default function HomePage() {
 
   return (
     <div>
-      {/* ===== HERO SECTION (managed in Website Manager) ===== */}
-      <section className="relative h-[90vh] min-h-[600px] lg:h-screen flex items-center overflow-hidden" style={{ background: '#0d0d0d' }}>
-        {heroImage && (
-          <div className="absolute inset-0">
-            <img src={heroImage} alt="" className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
-          </div>
-        )}
-        <div className="container-custom relative z-10">
-          <div className="max-w-xl">
-            {home.heroTagline && (
-              <p className="text-brand-gold text-xs sm:text-sm tracking-[0.3em] uppercase mb-4 animate-fade-in">
-                {home.heroTagline}
-              </p>
-            )}
-            <h1 className="font-serif text-4xl sm:text-5xl lg:text-7xl text-white leading-[1.1] mb-6 animate-fade-in-up">
-              {home.heroTitle || 'Bold. Elegant.\nUnapologetically You.'}
+      {/* ===== HERO SECTION ===== */}
+      <section className="nobelle-hero">
+        <div className="nobelle-hero__bg">
+          <img
+            src={heroImage || '/images/hero_fashion.png'}
+            alt="NOBELLE — Elegance, Rooted in Culture"
+            className="nobelle-hero__img"
+          />
+          <div className="nobelle-hero__overlay" />
+        </div>
+
+        <div className="container-custom relative z-10 h-full flex items-center">
+          <div className="nobelle-hero__content">
+            <p className="nobelle-hero__eyebrow">
+              {home.heroTagline || 'Modern Nigerian Women\'s Fashion'}
+            </p>
+            <div className="nobelle-hero__rule" />
+            <h1 className="nobelle-hero__title">
+              {home.heroTitle
+                ? home.heroTitle
+                : <>NOBELLE<br /><em>Elegance, Rooted in Culture.</em></>}
             </h1>
-            {home.heroSubtitle && (
-              <p className="text-white/70 text-base sm:text-lg mb-8 max-w-md leading-relaxed animate-fade-in-up" style={{ animationDelay: '200ms' }}>
-                {home.heroSubtitle}
-              </p>
-            )}
-            <div className="flex flex-wrap gap-4 animate-fade-in-up" style={{ animationDelay: '400ms' }}>
-              <Link to={home.ctaLink || '/shop'} className="btn-primary">
-                {home.ctaText || 'Shop Now'}
-                <ArrowRight size={16} className="ml-2" />
+            <p className="nobelle-hero__sub">
+              {home.heroSubtitle ||
+                'Discover modern Nigerian fashion designed to make every woman feel confident, beautiful, and effortlessly elegant.'}
+            </p>
+            <div className="nobelle-hero__ctas">
+              <Link to={home.ctaLink || '/shop'} className="nobelle-hero__btn-primary">
+                {home.ctaText || 'Shop Collection'}
+                <ArrowRight size={15} className="ml-2 flex-shrink-0" />
               </Link>
-              <Link to="/categories" className="btn-outline-white">
-                Explore Collections
+              <Link to="/shop" className="nobelle-hero__btn-ghost">
+                Explore New Arrivals
               </Link>
             </div>
           </div>
         </div>
+
+        <div className="nobelle-hero__scroll-hint" aria-hidden="true">
+          <span />
+        </div>
       </section>
 
-      {/* ===== FEATURED COLLECTION ===== */}
+      {/* ===== NIGERIAN COLLECTIONS STRIP ===== */}
+      <section className="section-padding bg-brand-charcoal">
+        <div className="container-custom">
+          <AnimatedSection className="text-center mb-10">
+            <p className="text-brand-gold text-xs tracking-[0.3em] uppercase mb-3">Our Collections</p>
+            <h2 className="font-serif text-3xl sm:text-4xl text-white">
+              {home.featuredCollectionTitle || 'The NOBELLE Edit'}
+            </h2>
+            <p className="text-white/50 text-sm mt-2 max-w-md mx-auto">
+              Modern Nigerian fashion, made for every woman and every occasion.
+            </p>
+          </AnimatedSection>
+
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+            {NIGERIAN_COLLECTIONS.map((col, i) => (
+              <AnimatedSection key={col.id}>
+                <Link
+                  to={col.href}
+                  className="group block relative overflow-hidden aspect-[3/4]"
+                  style={{ animationDelay: `${i * 80}ms` }}
+                >
+                  <img
+                    src={col.image}
+                    alt={col.label}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  {/* Dark bottom gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  {/* Text */}
+                  <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
+                    <p className="text-brand-gold text-[10px] tracking-[0.2em] uppercase mb-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      {col.tagline}
+                    </p>
+                    <h3 className="font-serif text-base sm:text-lg text-white leading-tight">
+                      {col.label}
+                    </h3>
+                    <div className="flex items-center gap-1 mt-2 text-white/60 text-xs tracking-wider uppercase group-hover:text-brand-gold transition-colors duration-300">
+                      <span>Shop Now</span>
+                      <ArrowRight size={11} />
+                    </div>
+                  </div>
+                </Link>
+              </AnimatedSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== FEATURED PRODUCTS ===== */}
       <section className="section-padding bg-white">
         <div className="container-custom">
           <SectionHeader
-            title={home.featuredCollectionTitle || 'Featured Collection'}
-            subtitle="Curated pieces for the discerning woman"
+            title={home.featuredCollectionTitle || 'Featured Pieces'}
+            subtitle="Curated Nigerian fashion for the contemporary woman"
           />
           {featuredFallBack.length === 0 ? (
             <div className="text-center py-16">
               <Sparkles size={28} className="mx-auto mb-3 text-brand-red/40" />
-              <p className="font-serif text-xl text-brand-charcoal mb-2">Our collection is being curated</p>
-              <p className="text-brand-gray text-sm mb-6">New pieces are on their way. Check back soon.</p>
+              <p className="font-serif text-xl text-brand-charcoal mb-2">
+                Our Ankara & Lace collection is being curated
+              </p>
+              <p className="text-brand-gray text-sm mb-6">
+                New Nigerian fashion pieces are on their way. Check back soon.
+              </p>
               <Link to="/shop" className="btn-secondary">Browse the Shop</Link>
             </div>
           ) : (
@@ -126,11 +216,13 @@ export default function HomePage() {
       <section className="section-padding bg-brand-cream">
         <div className="container-custom">
           <SectionHeader
-            title="Latest Pieces"
-            subtitle="Fresh additions to the NOBELLE wardrobe"
+            title="New Arrivals"
+            subtitle="Fresh Nigerian fashion added to the NOBELLE wardrobe"
           />
           {activeProducts.length === 0 ? (
-            <p className="text-center text-brand-gray text-sm py-10">New arrivals will appear here as they are added.</p>
+            <p className="text-center text-brand-gray text-sm py-10">
+              New Ankara, Lace, and occasion wear pieces will appear here as they are added.
+            </p>
           ) : (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
               {activeProducts.slice(0, 4).map((product, i) => (
@@ -145,11 +237,13 @@ export default function HomePage() {
       <section className="section-padding bg-brand-beige">
         <div className="container-custom max-w-2xl text-center">
           <AnimatedSection>
+            <p className="text-brand-gold text-xs tracking-[0.3em] uppercase mb-4">Stay Connected</p>
             <h2 className="font-serif text-3xl sm:text-4xl text-brand-charcoal mb-4">
               Join the NOBELLE Community
             </h2>
             <p className="text-brand-gray mb-8">
-              Be the first to know about new collections, exclusive offers, and style inspiration delivered straight to your inbox.
+              Be the first to know about new Ankara drops, Lace collections, and exclusive offers
+              delivered straight to your inbox.
             </p>
             <NewsletterForm />
             <p className="text-[11px] text-brand-gray-light mt-3">

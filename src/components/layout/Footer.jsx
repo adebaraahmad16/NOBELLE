@@ -62,7 +62,7 @@ export default function Footer() {
               <h2 className="font-serif text-2xl font-bold tracking-wider text-white">NOBELLE</h2>
             </div>
             <p className="text-white/60 text-sm leading-relaxed mb-6">
-              Bold. Elegant. Unapologetically You. Premium fashion for the modern, confident woman.
+              Modern Nigerian fashion for the contemporary African woman. Ankara, Lace, and Occasion Wear — crafted with pride.
             </p>
             <div className="flex gap-4">
               <a href="#" className="p-2 border border-white/20 text-white/60 hover:text-white hover:border-brand-red hover:bg-brand-red transition-all duration-300" aria-label="Instagram">
@@ -83,8 +83,9 @@ export default function Footer() {
             <ul className="space-y-3">
               {[
                 { name: 'Shop All', path: '/shop' },
+                { name: 'Ankara Collection', path: '/shop' },
+                { name: 'Lace & Occasion Wear', path: '/shop' },
                 { name: 'New Arrivals', path: '/shop' },
-                { name: 'Best Sellers', path: '/shop' },
                 { name: 'Categories', path: '/categories' },
                 { name: 'About Us', path: '/about' },
               ].map((link) => (
@@ -133,11 +134,11 @@ export default function Footer() {
               </li>
               <li className="flex items-start gap-3">
                 <Phone size={16} className="text-brand-red mt-0.5 flex-shrink-0" />
-                <span className="text-sm text-white/60">+1 (555) 123-4567</span>
+                <span className="text-sm text-white/60">+234 (0) 800 NOBELLE</span>
               </li>
               <li className="flex items-start gap-3">
                 <MapPin size={16} className="text-brand-red mt-0.5 flex-shrink-0" />
-                <span className="text-sm text-white/60">123 Fashion Ave,<br />New York, NY 10001</span>
+                <span className="text-sm text-white/60">Victoria Island, Lagos,<br />Nigeria</span>
               </li>
             </ul>
           </div>
@@ -159,7 +160,7 @@ export default function Footer() {
               <span className="text-xs">•</span>
               <span className="text-xs">Mastercard</span>
               <span className="text-xs">•</span>
-              <span className="text-xs">PayPal</span>
+              <span className="text-xs">Paystack</span>
             </div>
           </div>
         </div>

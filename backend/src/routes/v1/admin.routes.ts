@@ -6,7 +6,7 @@ import { CategoryController } from '../../controllers/category.controller';
 import { CollectionController } from '../../controllers/collection.controller';
 import { adminAuthMiddleware } from '../../middleware/adminAuth.middleware';
 import { validate } from '../../middleware/validate.middleware';
-import { loginSchema, refreshTokenSchema } from '../../validators/auth.validator';
+import { loginSchema, refreshTokenSchema, forgotPasswordSchema, resetPasswordSchema } from '../../validators/auth.validator';
 import { createProductSchema, updateProductSchema } from '../../validators/product.validator';
 import { createCategorySchema, updateCategorySchema } from '../../validators/category.validator';
 import { updateOrderStatusSchema } from '../../validators/order.validator';
@@ -18,6 +18,8 @@ const router = Router();
 router.post('/auth/login', validate(loginSchema), AdminAuthController.login);
 router.post('/auth/refresh', validate(refreshTokenSchema), AdminAuthController.refreshToken);
 router.post('/auth/logout', AdminAuthController.logout);
+router.post('/auth/forgot-password', validate(forgotPasswordSchema), AdminAuthController.forgotPassword);
+router.post('/auth/reset-password', validate(resetPasswordSchema), AdminAuthController.resetPassword);
 
 // Protected Admin routes
 router.use(adminAuthMiddleware());

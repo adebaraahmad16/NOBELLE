@@ -1,8 +1,20 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAdminAuth } from '../../context/AdminAuthContext';
-import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, ShieldCheck, Loader2 } from 'lucide-react';
+
+/*
+  NOBELLE Admin Login — Premium deep-burgundy entrance.
+
+  Design language:
+  - Left: deep burgundy brand panel with subtle tonal depth, wordmark,
+    fine decorative linework (no fake photography or statistics).
+  - Right: warm cream login panel matching the dashboard surfaces.
+  - Auth: real backend (POST /api/v1/admin/auth/login). No demo credentials.
+*/
+
+const BURGUNDY = '#641F2D';
+const BURGUNDY_RICH = '#7A2939';
 
 export default function AdminLoginPage() {
   const { login, isAuthenticated } = useAdminAuth();
@@ -11,21 +23,18 @@ export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showForgotModal, setShowForgotModal] = useState(false);
-  const [forgotEmail, setForgotEmail] = useState('');
-  const [forgotSent, setForgotSent] = useState(false);
 
-  // Auto-redirect if already authenticated
+  // Redirect authenticated admins straight to the dashboard
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/admin', { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
-  const handleLoginSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -35,227 +44,379 @@ export default function AdminLoginPage() {
     }
 
     setLoading(true);
-    setTimeout(() => {
-      const success = login(email.trim(), password);
-      if (success) {
-        navigate('/admin', { replace: true });
+    try {
+      await login(email.trim(), password, rememberMe);
+      navigate('/admin', { replace: true });
+    } catch (err) {
+      if (err?.status === 0 || err?.status >= 500) {
+        setError('Unable to sign in right now. Please try again.');
       } else {
-        setLoading(false);
-        setError('Invalid email or password. Please try again.');
+        // 401 and validation errors — same neutral message, no account hints
+        setError('Invalid email or password.');
       }
-    }, 400);
-  };
-
-  const handleForgotSubmit = (e) => {
-    e.preventDefault();
-    if (!forgotEmail) return;
-    setForgotSent(true);
-    setTimeout(() => {
-      setShowForgotModal(false);
-      setForgotSent(false);
-      setForgotEmail('');
-    }, 1200);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
-      style={{
-        background: 'linear-gradient(135deg, #0b0b0e 0%, #1c050c 50%, #0d0d12 100%)',
-      }}
-    >
-      {/* Background glows */}
-      <div className="absolute top-10 left-10 w-96 h-96 rounded-full bg-[#A94A5A]/10 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-96 h-96 rounded-full bg-[#C8A96A]/10 blur-3xl pointer-events-none" />
-
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="w-full max-w-md rounded-3xl overflow-hidden relative z-10"
+    <div className="min-h-screen w-full flex flex-col lg:flex-row" style={{ background: BURGUNDY }}>
+      {/* ══════════ LEFT — Burgundy brand section ══════════ */}
+      <section
+        className="relative lg:w-[52%] flex flex-col justify-between overflow-hidden"
         style={{
-          background: 'rgba(18, 18, 22, 0.85)',
-          backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(169,74,90,0.25)',
-          boxShadow: '0 24px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1)',
+          background: `linear-gradient(160deg, ${BURGUNDY_RICH} 0%, ${BURGUNDY} 45%, #551622 100%)`,
+          minHeight: '240px',
         }}
       >
+        {/* Subtle tonal depth — soft radial washes, no neon */}
         <div
-          className="h-1.5 w-full"
-          style={{ background: 'linear-gradient(90deg, #A94A5A 0%, #C8A96A 100%)' }}
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              'radial-gradient(ellipse 70% 55% at 18% 22%, rgba(217,139,151,0.10) 0%, transparent 60%), radial-gradient(ellipse 55% 45% at 85% 80%, rgba(100,31,45,0.9) 0%, transparent 70%)',
+          }}
         />
 
-        <div className="p-8 space-y-6">
-          {/* Brand header */}
-          <div className="text-center space-y-2">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#A94A5A]/20 border border-[#A94A5A]/40 mb-2 shadow-2xl p-2.5 backdrop-blur-sm">
-              <img
-                src="/nobelle.png"
-                alt="NOBELLE Logo"
-                className="w-full h-full object-contain drop-shadow-md"
+        {/* Fine fashion-inspired linework — hairline arcs & threads */}
+        <svg
+          className="absolute inset-0 w-full h-full pointer-events-none"
+          style={{ opacity: 0.16 }}
+          aria-hidden="true"
+        >
+          <defs>
+            <pattern id="nb-threads" width="120" height="120" patternUnits="userSpaceOnUse">
+              <path
+                d="M0 60 Q 30 30, 60 60 T 120 60"
+                fill="none"
+                stroke="#D98B97"
+                strokeWidth="0.6"
               />
+              <path
+                d="M0 90 Q 30 60, 60 90 T 120 90"
+                fill="none"
+                stroke="#E8D8C8"
+                strokeWidth="0.4"
+              />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#nb-threads)" />
+        </svg>
+
+        {/* Hairline frame — couture atelier detail */}
+        <div
+          className="absolute pointer-events-none hidden lg:block"
+          style={{
+            inset: '24px',
+            border: '1px solid rgba(232,216,200,0.14)',
+            borderRadius: '2px',
+          }}
+        />
+
+        {/* Brand block */}
+        <div className="relative z-10 px-8 sm:px-14 pt-10 lg:pt-16">
+          <Link to="/" className="inline-flex items-center gap-3 group" aria-label="NOBELLE home">
+            <img
+              src="/nobelle.png"
+              alt="NOBELLE"
+              className="w-11 h-11 object-contain rounded-full"
+              style={{
+                filter: 'brightness(1.15)',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
+                border: '1px solid rgba(232,216,200,0.25)',
+              }}
+            />
+            <div>
+              <div
+                className="font-serif font-bold text-2xl tracking-[0.22em] text-[#FCFAF7] leading-none"
+              >
+                NOBELLE
+              </div>
+              <div
+                className="text-[9px] uppercase tracking-[0.32em] mt-1.5"
+                style={{ color: 'rgba(232,216,200,0.75)' }}
+              >
+                Fashion House
+              </div>
             </div>
-            <h1 className="text-2xl font-serif font-bold text-white tracking-widest uppercase">
+          </Link>
+        </div>
+
+        {/* Statement — visible on desktop only, keeps mobile compact */}
+        <div className="relative z-10 hidden lg:flex flex-col justify-center flex-1 px-14 pb-8">
+          <div
+            className="w-10 h-px mb-8"
+            style={{ background: 'linear-gradient(90deg, #D98B97, transparent)' }}
+          />
+          <p
+            className="font-serif text-4xl leading-snug max-w-md"
+            style={{ color: '#F8F3EC' }}
+          >
+            Elegance, managed beautifully.
+          </p>
+          <p
+            className="mt-6 text-sm max-w-sm leading-relaxed"
+            style={{ color: 'rgba(232,216,200,0.72)' }}
+          >
+            The private studio behind the NOBELLE atelier — where every collection,
+            order and client is cared for.
+          </p>
+        </div>
+
+        {/* Footer strip */}
+        <div className="relative z-10 px-8 sm:px-14 pb-8 lg:pb-10 hidden lg:flex items-center gap-2">
+          <ShieldCheck size={14} style={{ color: 'rgba(232,216,200,0.55)' }} />
+          <span
+            className="text-[10px] uppercase tracking-[0.2em]"
+            style={{ color: 'rgba(232,216,200,0.55)' }}
+          >
+            Secure admin access
+          </span>
+        </div>
+      </section>
+
+      {/* ══════════ RIGHT — Cream login panel ══════════ */}
+      <section
+        className="relative flex-1 flex items-center justify-center p-6 sm:p-10"
+        style={{
+          background: 'linear-gradient(175deg, #FCFAF7 0%, #F8F3EC 100%)',
+        }}
+      >
+        <div className="w-full max-w-md">
+          {/* Mobile brand — burgundy block sits above on small screens */}
+          <div className="lg:hidden text-center mb-8">
+            <img
+              src="/nobelle.png"
+              alt="NOBELLE"
+              className="w-12 h-12 object-contain rounded-full mx-auto mb-3"
+              style={{ filter: 'brightness(1.1)' }}
+            />
+            <div
+              className="font-serif font-bold text-xl tracking-[0.2em]"
+              style={{ color: BURGUNDY }}
+            >
               NOBELLE
+            </div>
+          </div>
+
+          <div className="mb-8">
+            <div
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-5"
+              style={{
+                background: 'rgba(100,31,45,0.06)',
+                border: '1px solid rgba(100,31,45,0.14)',
+              }}
+            >
+              <ShieldCheck size={12} style={{ color: BURGUNDY }} />
+              <span
+                className="text-[9px] font-bold uppercase tracking-[0.18em]"
+                style={{ color: BURGUNDY }}
+              >
+                Admin Portal
+              </span>
+            </div>
+
+            <h1
+              className="font-serif text-3xl sm:text-4xl font-bold leading-tight"
+              style={{ color: '#242124' }}
+            >
+              Welcome back
             </h1>
-            <p className="text-xs font-semibold tracking-wider uppercase text-[#F5F5DC]/60">
-              Admin Studio
+            <p className="mt-2.5 text-sm" style={{ color: '#777277' }}>
+              Sign in to manage your NOBELLE store.
             </p>
           </div>
 
           {error && (
             <div
-              className="p-3.5 rounded-xl text-xs font-medium leading-relaxed text-center"
-              style={{ background: 'rgba(169,74,90,0.15)', border: '1px solid rgba(169,74,90,0.4)', color: '#f2b8bc' }}
+              className="mb-5 p-3.5 rounded-xl flex items-start gap-2.5 nb-fade-up"
               role="alert"
+              style={{
+                background: 'rgba(100,31,45,0.05)',
+                border: '1px solid rgba(100,31,45,0.18)',
+              }}
             >
-              {error}
+              <AlertCircle size={15} className="shrink-0 mt-0.5" style={{ color: BURGUNDY }} />
+              <p className="text-xs font-medium leading-relaxed" style={{ color: '#641F2D' }}>
+                {error}
+              </p>
             </div>
           )}
 
-          <form onSubmit={handleLoginSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5" noValidate>
             <div>
-              <label htmlFor="login-email" className="block text-[10px] font-bold uppercase tracking-widest text-[#F5F5DC]/70 mb-1.5">
-                Email Address
+              <label
+                htmlFor="admin-email"
+                className="block text-[10px] font-bold uppercase tracking-[0.16em] mb-2"
+                style={{ color: '#555055' }}
+              >
+                Email
               </label>
               <div className="relative">
-                <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400" />
+                <Mail
+                  size={15}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
+                  style={{ color: '#A8A1A8' }}
+                />
                 <input
-                  id="login-email"
+                  id="admin-email"
                   type="email"
-                  required
                   autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@nobelle.com"
-                  className="w-full pl-10 pr-4 py-3 bg-white/5 border border-[#A94A5A]/30 rounded-xl text-white text-xs outline-none focus:border-[#A94A5A] focus:ring-1 focus:ring-[#A94A5A] transition-all"
+                  placeholder="Enter your email"
+                  disabled={loading}
+                  className="w-full pl-11 pr-4 py-3.5 text-sm rounded-xl outline-none transition-all duration-200 disabled:opacity-60"
+                  style={{
+                    background: '#FCFAF7',
+                    border: '1px solid #E8D8C8',
+                    color: '#242124',
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = BURGUNDY;
+                    e.target.style.boxShadow = '0 0 0 3px rgba(100,31,45,0.08)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#E8D8C8';
+                    e.target.style.boxShadow = 'none';
+                  }}
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="login-password" className="block text-[10px] font-bold uppercase tracking-widest text-[#F5F5DC]/70 mb-1.5">
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label
+                  htmlFor="admin-password"
+                  className="block text-[10px] font-bold uppercase tracking-[0.16em]"
+                  style={{ color: '#555055' }}
+                >
+                  Password
+                </label>
+                <Link
+                  to="/admin/forgot-password"
+                  className="text-xs font-medium transition-colors hover:underline"
+                  style={{ color: BURGUNDY }}
+                >
+                  Forgot password?
+                </Link>
+              </div>
               <div className="relative">
-                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400" />
+                <Lock
+                  size={15}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
+                  style={{ color: '#A8A1A8' }}
+                />
                 <input
-                  id="login-password"
+                  id="admin-password"
                   type={showPassword ? 'text' : 'password'}
-                  required
                   autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full pl-10 pr-10 py-3 bg-white/5 border border-[#A94A5A]/30 rounded-xl text-white text-xs outline-none focus:border-[#A94A5A] focus:ring-1 focus:ring-[#A94A5A] transition-all"
+                  placeholder="Enter your password"
+                  disabled={loading}
+                  className="w-full pl-11 pr-11 py-3.5 text-sm rounded-xl outline-none transition-all duration-200 disabled:opacity-60"
+                  style={{
+                    background: '#FCFAF7',
+                    border: '1px solid #E8D8C8',
+                    color: '#242124',
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = BURGUNDY;
+                    e.target.style.boxShadow = '0 0 0 3px rgba(100,31,45,0.08)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#E8D8C8';
+                    e.target.style.boxShadow = 'none';
+                  }}
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white transition-colors"
+                  onClick={() => setShowPassword((s) => !s)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 rounded-md transition-colors"
+                  style={{ color: '#A8A1A8' }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = BURGUNDY)}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = '#A8A1A8')}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-1">
-              <label className="flex items-center gap-2 cursor-pointer">
+            {/* Remember me */}
+            <label className="flex items-center gap-2.5 cursor-pointer select-none w-fit">
+              <span className="relative flex items-center justify-center">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 rounded accent-[#A94A5A] cursor-pointer"
+                  className="peer w-4 h-4 appearance-none rounded-[4px] cursor-pointer transition-all duration-150 checked:bg-[#641F2D] border"
+                  style={{
+                    border: '1px solid #D8CFC4',
+                    background: rememberMe ? BURGUNDY : '#FCFAF7',
+                  }}
                 />
-                <span className="text-xs text-neutral-300 font-medium">Remember Me</span>
-              </label>
+                {rememberMe && (
+                  <svg
+                    className="absolute w-3 h-3 pointer-events-none"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#FCFAF7"
+                    strokeWidth="3.5"
+                    aria-hidden="true"
+                  >
+                    <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+              </span>
+              <span className="text-xs font-medium" style={{ color: '#555055' }}>
+                Remember me
+              </span>
+            </label>
 
-              <button
-                type="button"
-                onClick={() => setShowForgotModal(true)}
-                className="text-xs text-[#C8A96A] hover:underline font-medium transition-colors"
-              >
-                Forgot Password?
-              </button>
-            </div>
-
+            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 px-4 rounded-xl text-xs font-bold text-white uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
+              className="w-full py-4 rounded-xl text-sm font-bold tracking-wide transition-all duration-200 flex items-center justify-center gap-2 disabled:cursor-not-allowed"
               style={{
-                background: 'linear-gradient(135deg, #A94A5A 0%, #8E3D4C 100%)',
-                boxShadow: '0 8px 24px rgba(169,74,90,0.4)',
+                background: loading ? '#7A2939' : BURGUNDY,
+                color: '#FCFAF7',
+                boxShadow: loading ? 'none' : '0 8px 24px rgba(100,31,45,0.28)',
+              }}
+              onMouseEnter={(e) => {
+                if (!loading) e.currentTarget.style.background = BURGUNDY_RICH;
+              }}
+              onMouseLeave={(e) => {
+                if (!loading) e.currentTarget.style.background = BURGUNDY;
               }}
             >
               {loading ? (
-                <span>Signing In...</span>
+                <>
+                  <Loader2 size={15} className="animate-spin" />
+                  Signing in...
+                </>
               ) : (
                 <>
-                  <span>Sign In to Dashboard</span>
-                  <ArrowRight size={14} />
+                  Sign In
+                  <ArrowRight size={15} />
                 </>
               )}
             </button>
           </form>
 
-          <p className="pt-2 text-center text-[11px] text-neutral-500 border-t border-white/10">
-            Authorised personnel only. All activity is logged.
+          <p
+            className="mt-8 pt-6 text-center text-[11px]"
+            style={{
+              color: '#A8A1A8',
+              borderTop: '1px solid rgba(232,216,200,0.7)',
+            }}
+          >
+            Authorised personnel only · NOBELLE Admin
           </p>
         </div>
-      </motion.div>
-
-      {/* Forgot Password Modal */}
-      {showForgotModal && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div
-            className="w-full max-w-sm p-6 rounded-2xl bg-neutral-900 border border-[#A94A5A]/40 text-white space-y-4"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Reset password"
-          >
-            <h3 className="font-serif font-bold text-lg">Reset Password</h3>
-            {forgotSent ? (
-              <p className="text-xs text-green-400">
-                If an account exists for {forgotEmail}, password reset instructions have been sent.
-              </p>
-            ) : (
-              <>
-                <p className="text-xs text-neutral-300">
-                  Enter your administrator email address and we will send you a password reset link.
-                </p>
-                <form onSubmit={handleForgotSubmit} className="space-y-3">
-                  <input
-                    type="email"
-                    required
-                    value={forgotEmail}
-                    onChange={(e) => setForgotEmail(e.target.value)}
-                    placeholder="you@nobelle.com"
-                    aria-label="Your email address"
-                    className="w-full px-3.5 py-2.5 bg-white/5 border border-neutral-700 rounded-xl text-xs outline-none text-white focus:border-[#A94A5A]"
-                  />
-                  <div className="flex justify-end gap-2 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowForgotModal(false)}
-                      className="px-3.5 py-2 rounded-xl text-xs font-bold bg-neutral-800 text-neutral-300"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-[#A94A5A]"
-                    >
-                      Send Reset Link
-                    </button>
-                  </div>
-                </form>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+      </section>
     </div>
   );
 }
