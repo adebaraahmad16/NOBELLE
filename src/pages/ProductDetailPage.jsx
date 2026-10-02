@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Minus, Plus, ShoppingBag, Heart, Share2, ChevronDown, Check, Truck, RotateCcw, Shield } from 'lucide-react';
 import { useProducts } from '../context/ProductContext';
 import { useCart } from '../context/CartContext';
+import { formatNaira } from '../utils/currency';
 import ProductCard from '../components/ui/ProductCard';
 import StarRating from '../components/ui/StarRating';
 import SectionHeader from '../components/ui/SectionHeader';
@@ -73,7 +74,7 @@ export default function ProductDetailPage() {
             <div className="space-y-4">
               {/* Main Image */}
               <div
-                className="relative aspect-[3/4] bg-brand-beige overflow-hidden cursor-crosshair"
+                className="relative aspect-[3/4] bg-brand-beige overflow-hidden cursor-zoom-in sm:cursor-crosshair"
                 onMouseEnter={() => setZoomed(true)}
                 onMouseLeave={() => setZoomed(false)}
                 onMouseMove={handleMouseMove}
@@ -105,12 +106,12 @@ export default function ProductDetailPage() {
 
               {/* Thumbnails */}
               {product.images.length > 1 && (
-                <div className="flex gap-3">
+                <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 scrollbar-none">
                   {product.images.map((img, i) => (
                     <button
                       key={i}
                       onClick={() => setActiveImage(i)}
-                      className={`w-20 h-24 border-2 overflow-hidden transition-all ${
+                      className={`w-16 h-20 sm:w-20 sm:h-24 flex-shrink-0 border-2 overflow-hidden transition-all ${
                         i === activeImage
                           ? 'border-brand-red'
                           : 'border-transparent hover:border-brand-beige-dark'
@@ -141,14 +142,14 @@ export default function ProductDetailPage() {
               </div>
 
               {/* Price */}
-              <div className="flex items-center gap-3 mb-8">
-                <span className="text-2xl font-semibold text-brand-charcoal">
-                  ${product.price.toFixed(2)}
+              <div className="flex items-center gap-3 mb-8 flex-wrap">
+                <span className="text-2xl font-semibold text-brand-charcoal font-numeric">
+                  {formatNaira(product.price)}
                 </span>
                 {product.originalPrice && (
                   <>
-                    <span className="text-lg text-brand-gray-light line-through">
-                      ${product.originalPrice.toFixed(2)}
+                    <span className="text-lg text-brand-gray-light line-through font-numeric">
+                      {formatNaira(product.originalPrice)}
                     </span>
                     <span className="bg-brand-red/10 text-brand-red text-xs px-2 py-1 font-medium">
                       {Math.round((1 - product.price / product.originalPrice) * 100)}% OFF
@@ -172,7 +173,7 @@ export default function ProductDetailPage() {
                     <button
                       key={size}
                       onClick={() => setSelectedSize(size)}
-                      className={`w-12 h-12 border text-sm font-medium transition-all duration-200 ${
+                      className={`w-11 h-11 sm:w-12 sm:h-12 border text-xs sm:text-sm font-medium transition-all duration-200 ${
                         selectedSize === size
                           ? 'border-brand-red bg-brand-red text-white'
                           : 'border-brand-beige-dark text-brand-charcoal hover:border-brand-charcoal'
@@ -212,11 +213,11 @@ export default function ProductDetailPage() {
               </div>
 
               {/* Actions */}
-              <div className="flex gap-3 mb-8">
+              <div className="flex items-stretch gap-2 sm:gap-3 mb-8">
                 <button
                   onClick={handleAddToCart}
                   disabled={!selectedSize}
-                  className={`flex-1 flex items-center justify-center gap-2 py-4 text-sm tracking-wider uppercase font-medium transition-all duration-300 ${
+                  className={`flex-1 flex items-center justify-center gap-2 py-3.5 sm:py-4 px-4 text-xs sm:text-sm tracking-wider uppercase font-medium transition-all duration-300 ${
                     addedToCart
                       ? 'bg-green-600 text-white'
                       : selectedSize
@@ -227,7 +228,7 @@ export default function ProductDetailPage() {
                   {addedToCart ? (
                     <>
                       <Check size={18} />
-                      Added to Cart!
+                      Added!
                     </>
                   ) : (
                     <>
@@ -236,27 +237,27 @@ export default function ProductDetailPage() {
                     </>
                   )}
                 </button>
-                <button className="w-12 h-auto border border-brand-beige-dark flex items-center justify-center text-brand-gray hover:text-brand-red hover:border-brand-red transition-all">
+                <button className="w-11 sm:w-12 border border-brand-beige-dark flex items-center justify-center text-brand-gray hover:text-brand-red hover:border-brand-red transition-all shrink-0">
                   <Heart size={18} />
                 </button>
-                <button className="w-12 h-auto border border-brand-beige-dark flex items-center justify-center text-brand-gray hover:text-brand-charcoal hover:border-brand-charcoal transition-all">
+                <button className="w-11 sm:w-12 border border-brand-beige-dark flex items-center justify-center text-brand-gray hover:text-brand-charcoal hover:border-brand-charcoal transition-all shrink-0">
                   <Share2 size={18} />
                 </button>
               </div>
 
               {/* Features */}
-              <div className="grid grid-cols-3 gap-4 mb-8 py-6 border-y border-brand-beige">
+              <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-8 py-5 sm:py-6 border-y border-brand-beige">
                 <div className="text-center">
-                  <Truck size={20} className="mx-auto text-brand-charcoal mb-2" />
-                  <p className="text-[11px] text-brand-gray">Free Shipping $200+</p>
+                  <Truck size={18} className="mx-auto text-brand-charcoal mb-1.5 sm:mb-2" />
+                  <p className="text-[10px] sm:text-[11px] text-brand-gray leading-tight">Free Delivery ₦150k+</p>
                 </div>
                 <div className="text-center">
-                  <RotateCcw size={20} className="mx-auto text-brand-charcoal mb-2" />
-                  <p className="text-[11px] text-brand-gray">30-Day Returns</p>
+                  <RotateCcw size={18} className="mx-auto text-brand-charcoal mb-1.5 sm:mb-2" />
+                  <p className="text-[10px] sm:text-[11px] text-brand-gray leading-tight">30-Day Returns</p>
                 </div>
                 <div className="text-center">
-                  <Shield size={20} className="mx-auto text-brand-charcoal mb-2" />
-                  <p className="text-[11px] text-brand-gray">Secure Checkout</p>
+                  <Shield size={18} className="mx-auto text-brand-charcoal mb-1.5 sm:mb-2" />
+                  <p className="text-[10px] sm:text-[11px] text-brand-gray leading-tight">Secure Payment</p>
                 </div>
               </div>
 

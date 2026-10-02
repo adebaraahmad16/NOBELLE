@@ -155,9 +155,9 @@ export default function AdminOrdersPage() {
             />
           </Card>
 
-          {/* Table */}
+          {/* Table (Desktop) */}
           <Card padded={false}>
-            <div className="overflow-x-auto">
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left border-collapse min-w-[760px]">
                 <thead>
                   <tr
@@ -216,6 +216,42 @@ export default function AdminOrdersPage() {
                   )}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="md:hidden divide-y" style={{ borderColor: 'var(--admin-border-soft)' }}>
+              {filtered.map((o) => (
+                <div
+                  key={o.id}
+                  onClick={() => openOrder(o)}
+                  className="p-4 space-y-2.5 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-xs" style={{ color: 'var(--admin-text)' }}>{o.id}</span>
+                    <span className="text-[10px]" style={{ color: 'var(--admin-text-muted)' }}>
+                      {o.date ? new Date(o.date).toLocaleDateString('en-NG', { day: 'numeric', month: 'short' }) : ''}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold" style={{ color: 'var(--admin-text)' }}>{o.customerName}</p>
+                    <p className="text-[10px]" style={{ color: 'var(--admin-text-faint)' }}>{o.email}</p>
+                  </div>
+                  <div className="flex items-center justify-between pt-1">
+                    <div className="flex items-center gap-2">
+                      <StatusBadge status={o.status} />
+                      <StatusBadge status={o.paymentStatus} />
+                    </div>
+                    <span className="font-bold font-numeric text-xs" style={{ color: 'var(--admin-text)' }}>
+                      {formatNaira(o.totalAmount)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+              {filtered.length === 0 && (
+                <div className="p-8 text-center text-xs" style={{ color: 'var(--admin-text-muted)' }}>
+                  No orders match your search or filters.
+                </div>
+              )}
             </div>
           </Card>
         </>

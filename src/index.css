@@ -859,3 +859,59 @@ html.dark .quick-action-card {
   color: #B11226;
   margin-left: auto;
 }
+
+/* ─── Hide scrollbar utility (cross-browser) ─── */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* ─── Prevent layout overflow on mobile ─── */
+#root {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* ─── Toast: move to bottom-center on small screens ─── */
+@media (max-width: 480px) {
+  .toast {
+    left: 1rem;
+    right: 1rem;
+    bottom: 1rem;
+    width: auto;
+  }
+
+  .admin-toast {
+    left: 1rem;
+    right: 1rem;
+    bottom: 1rem;
+    min-width: 0;
+    width: auto;
+  }
+}
+
+/* ─── Animate fade-in-up (scroll animation) ─── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-fade-in {
+  animation: fadeInUp 0.45s ease-out both;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.7); }
+  to   { opacity: 1; transform: scale(1); }
+}

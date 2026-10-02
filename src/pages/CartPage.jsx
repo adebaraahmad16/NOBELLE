@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Minus, Plus, X, ShoppingBag, ArrowRight, Truck } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { formatNaira } from '../utils/currency';
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, cartSubtotal, cartShipping, cartTotal } = useCart();
@@ -46,20 +47,20 @@ export default function CartPage() {
             {/* Cart Items */}
             <div className="lg:col-span-2">
               {/* Free Shipping Bar */}
-              {cartSubtotal < 200 && (
-                <div className="bg-brand-cream p-4 mb-6 flex items-center gap-3">
+              {cartSubtotal < 150000 && (
+                <div className="bg-brand-cream p-3.5 sm:p-4 mb-6 flex items-center gap-3">
                   <Truck size={18} className="text-brand-gold flex-shrink-0" />
-                  <p className="text-sm text-brand-charcoal">
-                    Add <span className="font-semibold text-brand-red">${(200 - cartSubtotal).toFixed(2)}</span> more
-                    for <span className="font-semibold">free shipping!</span>
+                  <p className="text-xs sm:text-sm text-brand-charcoal">
+                    Add <span className="font-semibold text-brand-red font-numeric">{formatNaira(150000 - cartSubtotal)}</span> more
+                    for <span className="font-semibold">free delivery!</span>
                   </p>
                 </div>
               )}
-              {cartSubtotal >= 200 && (
-                <div className="bg-green-50 p-4 mb-6 flex items-center gap-3">
+              {cartSubtotal >= 150000 && (
+                <div className="bg-green-50 p-3.5 sm:p-4 mb-6 flex items-center gap-3">
                   <Truck size={18} className="text-green-600 flex-shrink-0" />
-                  <p className="text-sm text-green-700 font-medium">
-                    🎉 You qualify for free shipping!
+                  <p className="text-xs sm:text-sm text-green-700 font-medium">
+                    🎉 You qualify for free nationwide delivery!
                   </p>
                 </div>
               )}
@@ -77,11 +78,11 @@ export default function CartPage() {
                 {cart.map((item) => (
                   <div
                     key={`${item.id}-${item.size}`}
-                    className="py-6 grid grid-cols-1 sm:grid-cols-12 gap-4 items-center"
+                    className="py-5 sm:py-6 grid grid-cols-1 sm:grid-cols-12 gap-4 items-center"
                   >
                     {/* Product Info */}
-                    <div className="sm:col-span-6 flex gap-4">
-                      <Link to={`/product/${item.id}`} className="w-20 h-24 bg-brand-beige flex-shrink-0 overflow-hidden">
+                    <div className="sm:col-span-6 flex gap-3 sm:gap-4">
+                      <Link to={`/product/${item.id}`} className="w-16 h-20 sm:w-20 sm:h-24 bg-brand-beige flex-shrink-0 overflow-hidden">
                         <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                       </Link>
                       <div className="flex-1 min-w-0">
@@ -89,6 +90,9 @@ export default function CartPage() {
                           {item.name}
                         </Link>
                         <p className="text-xs text-brand-gray">Size: {item.size}</p>
+                        <p className="text-xs font-semibold text-brand-charcoal sm:hidden mt-1 font-numeric">
+                          {formatNaira(item.price)} each
+                        </p>
                         <button
                           onClick={() => removeFromCart(item.id, item.size)}
                           className="mt-2 text-[11px] text-brand-gray-light hover:text-brand-red transition-colors flex items-center gap-1 sm:hidden"
@@ -98,9 +102,9 @@ export default function CartPage() {
                       </div>
                     </div>
 
-                    {/* Price */}
+                    {/* Price (Desktop) */}
                     <div className="sm:col-span-2 text-center hidden sm:block">
-                      <span className="text-sm text-brand-charcoal">${item.price.toFixed(2)}</span>
+                      <span className="text-sm text-brand-charcoal font-numeric">{formatNaira(item.price)}</span>
                     </div>
 
                     {/* Quantity */}
@@ -110,15 +114,17 @@ export default function CartPage() {
                         <button
                           onClick={() => updateQuantity(item.id, item.size, item.quantity - 1)}
                           className="w-8 h-8 flex items-center justify-center text-brand-gray hover:text-brand-charcoal transition-colors"
+                          aria-label="Decrease quantity"
                         >
                           <Minus size={14} />
                         </button>
-                        <span className="w-10 h-8 flex items-center justify-center text-xs font-medium border-x border-brand-beige-dark">
+                        <span className="w-10 h-8 flex items-center justify-center text-xs font-medium border-x border-brand-beige-dark font-numeric">
                           {item.quantity}
                         </span>
                         <button
                           onClick={() => updateQuantity(item.id, item.size, item.quantity + 1)}
                           className="w-8 h-8 flex items-center justify-center text-brand-gray hover:text-brand-charcoal transition-colors"
+                          aria-label="Increase quantity"
                         >
                           <Plus size={14} />
                         </button>
@@ -127,8 +133,9 @@ export default function CartPage() {
 
                     {/* Total + Remove */}
                     <div className="sm:col-span-2 flex items-center justify-between sm:justify-end gap-4">
-                      <span className="text-sm font-semibold text-brand-charcoal">
-                        ${(item.price * item.quantity).toFixed(2)}
+                      <span className="text-xs text-brand-gray sm:hidden">Total:</span>
+                      <span className="text-sm font-semibold text-brand-charcoal font-numeric">
+                        {formatNaira(item.price * item.quantity)}
                       </span>
                       <button
                         onClick={() => removeFromCart(item.id, item.size)}
@@ -155,7 +162,7 @@ export default function CartPage() {
 
             {/* Order Summary */}
             <div className="lg:col-span-1">
-              <div className="bg-brand-cream p-6 lg:p-8 sticky top-28">
+              <div className="bg-brand-cream p-5 sm:p-6 lg:p-8 sticky top-28">
                 <h3 className="font-serif text-lg text-brand-charcoal mb-6 pb-4 border-b border-brand-beige-dark">
                   Order Summary
                 </h3>
@@ -163,28 +170,28 @@ export default function CartPage() {
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between text-sm">
                     <span className="text-brand-gray">Subtotal</span>
-                    <span className="text-brand-charcoal">${cartSubtotal.toFixed(2)}</span>
+                    <span className="text-brand-charcoal font-numeric">{formatNaira(cartSubtotal)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-brand-gray">Shipping</span>
-                    <span className="text-brand-charcoal">
+                    <span className="text-brand-gray">Delivery</span>
+                    <span className="text-brand-charcoal font-numeric">
                       {cartShipping === 0 ? (
-                        <span className="text-green-600">Free</span>
+                        <span className="text-green-600 font-semibold">Free</span>
                       ) : (
-                        `$${cartShipping.toFixed(2)}`
+                        formatNaira(cartShipping)
                       )}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-brand-gray">Tax</span>
-                    <span className="text-brand-gray-light">Calculated at checkout</span>
+                    <span className="text-brand-gray">Tax (VAT)</span>
+                    <span className="text-brand-gray-light text-xs">Included in price</span>
                   </div>
                 </div>
 
                 <div className="flex justify-between items-center py-4 border-t border-brand-beige-dark mb-6">
                   <span className="font-serif text-lg text-brand-charcoal">Total</span>
-                  <span className="font-serif text-xl font-semibold text-brand-charcoal">
-                    ${cartTotal.toFixed(2)}
+                  <span className="font-serif text-xl font-semibold text-brand-charcoal font-numeric">
+                    {formatNaira(cartTotal)}
                   </span>
                 </div>
 

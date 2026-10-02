@@ -52,7 +52,7 @@ export function PageHeader({ title, subtitle, breadcrumb = [], actions = null })
           </p>
         )}
       </div>
-      {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
+      {actions && <div className="flex items-center flex-wrap gap-2">{actions}</div>}
     </div>
   );
 }

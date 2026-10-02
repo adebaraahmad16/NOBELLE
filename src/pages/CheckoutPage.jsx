@@ -144,26 +144,26 @@ export default function CheckoutPage() {
       {/* Page Header */}
       <div className="bg-brand-beige py-8">
         <div className="container-custom">
-          <div className="flex items-center justify-between">
-            <Link to="/cart" className="flex items-center gap-2 text-sm text-brand-gray hover:text-brand-charcoal transition-colors">
-              <ChevronLeft size={16} /> Back to Cart
+          <div className="flex items-center justify-between gap-2">
+            <Link to="/cart" className="flex items-center gap-1.5 text-xs sm:text-sm text-brand-gray hover:text-brand-charcoal transition-colors shrink-0">
+              <ChevronLeft size={16} /> <span className="hidden xs:inline">Back to Cart</span><span className="xs:hidden">Cart</span>
             </Link>
-            <div className="flex items-center gap-2.5">
-              <img src="/nobelle.png" alt="NOBELLE Logo" className="w-7 h-7 object-contain rounded-full border border-brand-gold/40 shadow-sm" />
-              <h1 className="font-serif text-2xl text-brand-charcoal">Checkout</h1>
+            <div className="flex items-center gap-2">
+              <img src="/nobelle.png" alt="NOBELLE Logo" className="w-6 h-6 sm:w-7 sm:h-7 object-contain rounded-full border border-brand-gold/40 shadow-sm" />
+              <h1 className="font-serif text-lg sm:text-2xl text-brand-charcoal">Checkout</h1>
             </div>
-            <div className="flex items-center gap-1 text-xs text-brand-gray">
-              <Lock size={14} /> Secure
+            <div className="flex items-center gap-1 text-[11px] sm:text-xs text-brand-gray shrink-0">
+              <Lock size={13} /> <span className="hidden sm:inline">Secure</span>
             </div>
           </div>
 
           {/* Step Indicator */}
-          <div className="flex items-center justify-center mt-6 gap-0">
+          <div className="flex items-center justify-center mt-6">
             {['Shipping', 'Payment', 'Review'].map((label, i) => (
               <div key={label} className="flex items-center">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2">
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium transition-all ${
+                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[11px] sm:text-xs font-medium transition-all ${
                       step > i + 1
                         ? 'bg-green-600 text-white'
                         : step === i + 1
@@ -171,15 +171,15 @@ export default function CheckoutPage() {
                         : 'bg-brand-beige-dark text-brand-gray'
                     }`}
                   >
-                    {step > i + 1 ? <Check size={14} /> : i + 1}
+                    {step > i + 1 ? <Check size={13} /> : i + 1}
                   </div>
-                  <span className={`text-xs tracking-wider uppercase hidden sm:block ${
+                  <span className={`text-[11px] sm:text-xs tracking-wider uppercase hidden sm:block ${
                     step === i + 1 ? 'text-brand-charcoal font-medium' : 'text-brand-gray'
                   }`}>
                     {label}
                   </span>
                 </div>
-                {i < 2 && <div className="w-12 sm:w-20 h-px bg-brand-beige-dark mx-3" />}
+                {i < 2 && <div className="w-6 sm:w-16 h-px bg-brand-beige-dark mx-1.5 sm:mx-3" />}
               </div>
             ))}
           </div>
@@ -282,7 +282,7 @@ export default function CheckoutPage() {
                       </div>
                     )}
 
-                    <div className="flex gap-3 mt-8">
+                    <div className="flex flex-wrap gap-3 mt-8">
                       <button type="button" onClick={() => setStep(1)} className="btn-secondary">Back</button>
                       <button type="button" onClick={() => setStep(3)} className="btn-primary">Review Order</button>
                     </div>
@@ -331,7 +331,7 @@ export default function CheckoutPage() {
                       </div>
                     </div>
 
-                    <div className="flex gap-3">
+                    <div className="flex flex-wrap gap-3">
                       <button type="button" onClick={() => setStep(2)} className="btn-secondary">Back</button>
                       <button type="submit" className="btn-primary flex items-center gap-2">
                         <Lock size={16} />

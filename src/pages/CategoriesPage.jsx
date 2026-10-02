@@ -38,12 +38,12 @@ export default function CategoriesPage() {
       {visibleCategories.length > 0 && (
         <div className="sticky top-16 lg:top-20 z-30 bg-white/95 backdrop-blur-md border-b border-brand-beige">
           <div className="container-custom">
-            <div className="flex items-center justify-center gap-6 py-3 overflow-x-auto">
+            <div className="flex items-center justify-start sm:justify-center gap-4 sm:gap-6 py-3 overflow-x-auto scrollbar-none px-2 sm:px-0">
               {visibleCategories.map((cat) => (
                 <a
                   key={cat.id}
                   href={`#${cat.id}`}
-                  className="text-xs tracking-[0.15em] uppercase text-brand-gray hover:text-brand-red transition-colors whitespace-nowrap"
+                  className="text-xs tracking-[0.15em] uppercase text-brand-gray hover:text-brand-red transition-colors whitespace-nowrap shrink-0"
                 >
                   {cat.name}
                 </a>

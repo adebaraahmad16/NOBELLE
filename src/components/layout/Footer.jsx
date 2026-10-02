@@ -27,7 +27,7 @@ export default function Footer() {
                 Subscribe for exclusive offers, new arrivals, and style inspiration.
               </p>
             </div>
-            <form onSubmit={handleSubscribe} className="flex w-full max-w-md">
+            <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row w-full max-w-md gap-2 sm:gap-0">
               <input
                 type="email"
                 value={email}
@@ -38,7 +38,7 @@ export default function Footer() {
               />
               <button
                 type="submit"
-                className="px-6 py-3 bg-brand-red text-white text-sm tracking-wider uppercase hover:bg-brand-red-dark transition-colors flex items-center gap-2"
+                className="px-6 py-3 bg-brand-red text-white text-sm tracking-wider uppercase hover:bg-brand-red-dark transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
               >
                 {subscribed ? 'Subscribed!' : 'Subscribe'}
                 <ArrowRight size={16} />

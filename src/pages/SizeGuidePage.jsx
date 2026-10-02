@@ -43,8 +43,11 @@ export default function SizeGuidePage() {
 
           {/* Size Chart Table */}
           <AnimatedSection className="mb-16">
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
+            <p className="text-[11px] text-brand-gray-light text-right mb-2 sm:hidden">
+              Scroll horizontally for all sizes →
+            </p>
+            <div className="overflow-x-auto border border-brand-beige rounded-lg">
+              <table className="w-full border-collapse min-w-[520px]">
                 <thead>
                   <tr className="bg-brand-charcoal text-white">
                     <th className="px-4 py-3 text-left text-xs tracking-wider uppercase font-medium">Size</th>

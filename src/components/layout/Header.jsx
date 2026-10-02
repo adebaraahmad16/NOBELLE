@@ -25,8 +25,8 @@ export default function Header() {
   return (
     <>
       {/* Announcement Bar */}
-      <div className="bg-brand-charcoal text-white text-xs text-center py-2 tracking-widest uppercase font-light">
-        Free shipping on orders over $200 &nbsp;|&nbsp; New arrivals every week
+      <div className="bg-brand-charcoal text-white text-[10px] sm:text-xs text-center py-1.5 sm:py-2 px-3 tracking-wider sm:tracking-widest uppercase font-light truncate sm:overflow-visible">
+        Free nationwide delivery on orders over ₦150,000 &nbsp;|&nbsp; New Nigerian collections weekly
       </div>
 
       <header
@@ -39,7 +39,7 @@ export default function Header() {
         }`}
       >
         <div className="container-custom">
-          <div className="flex items-center justify-between h-16 lg:h-20">
+          <div className="flex items-center justify-between h-14 sm:h-16 lg:h-20">
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileOpen(true)}
@@ -50,13 +50,13 @@ export default function Header() {
             </button>
 
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2.5 flex-shrink-0 group">
+            <Link to="/" className="flex items-center gap-2 sm:gap-2.5 flex-shrink-0 group">
               <img
                 src="/nobelle.png"
                 alt="NOBELLE Logo"
-                className="w-8 h-8 sm:w-9 sm:h-9 object-contain rounded-full border border-brand-gold/40 shadow-sm transition-transform duration-300 group-hover:scale-105"
+                className="w-7 h-7 sm:w-9 sm:h-9 object-contain rounded-full border border-brand-gold/40 shadow-sm transition-transform duration-300 group-hover:scale-105"
               />
-              <span className="font-serif text-2xl lg:text-3xl font-bold tracking-wider text-brand-charcoal">
+              <span className="font-serif text-xl sm:text-2xl lg:text-3xl font-bold tracking-wider text-brand-charcoal">
                 NOBELLE
               </span>
             </Link>

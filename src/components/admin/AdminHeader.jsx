@@ -54,6 +54,7 @@ export default function AdminHeader({ onMenuClick, sidebarOpen = false }) {
   const [notifOpen, setNotifOpen] = useState(false);
   const [searchVal, setSearchVal] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const notifRef = useRef(null);
   const searchRef = useRef(null);
 
@@ -196,9 +197,16 @@ export default function AdminHeader({ onMenuClick, sidebarOpen = false }) {
         </div>
       </div>
 
-      {/* ── Search ── */}
-      <div className="relative hidden sm:block w-full max-w-xs" ref={searchRef}>
-        <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--nb-text-faint)' }} />
+      {/* ── Search (Desktop + Mobile overlay) ── */}
+      <div
+        className={`${
+          mobileSearchOpen
+            ? 'absolute inset-x-0 top-0 h-[64px] z-50 flex items-center px-4 bg-[var(--nb-surface)] border-b border-[var(--nb-border)]'
+            : 'relative hidden sm:block w-full max-w-xs'
+        }`}
+        ref={searchRef}
+      >
+        <Search size={14} className="absolute left-7 sm:left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--nb-text-faint)' }} />
         <input
           ref={searchRef}
           type="text"
@@ -216,7 +224,17 @@ export default function AdminHeader({ onMenuClick, sidebarOpen = false }) {
             ['--tw-ring-color']: 'rgba(169,74,90,0.15)',
           }}
         />
-        {searchVal ? (
+        {mobileSearchOpen ? (
+          <button
+            type="button"
+            className="absolute right-7 top-1/2 -translate-y-1/2 p-1"
+            style={{ color: 'var(--nb-text-muted)' }}
+            onClick={() => { setMobileSearchOpen(false); setSearchVal(''); setSearchFocused(false); }}
+            aria-label="Close search"
+          >
+            <X size={15} />
+          </button>
+        ) : searchVal ? (
           <button
             type="button"
             className="absolute right-3 top-1/2 -translate-y-1/2"
@@ -228,7 +246,7 @@ export default function AdminHeader({ onMenuClick, sidebarOpen = false }) {
           </button>
         ) : (
           <span
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-mono px-1.5 py-0.5 rounded"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-mono px-1.5 py-0.5 rounded hidden sm:inline"
             style={{ background: 'var(--nb-surface)', color: 'var(--nb-text-faint)', border: '1px solid var(--nb-border-soft)' }}
             aria-hidden="true"
           >
@@ -236,7 +254,7 @@ export default function AdminHeader({ onMenuClick, sidebarOpen = false }) {
           </span>
         )}
 
-        {searchFocused && results && (
+        {(searchFocused || mobileSearchOpen) && results && (
           <div
             className="absolute left-0 right-0 top-full mt-2 rounded-2xl overflow-hidden z-50 dropdown-enter"
             style={{
@@ -263,7 +281,7 @@ export default function AdminHeader({ onMenuClick, sidebarOpen = false }) {
                       key={it.id}
                       role="option"
                       aria-selected="false"
-                      onMouseDown={() => { navigate(it.path); setSearchFocused(false); setSearchVal(''); }}
+                      onMouseDown={() => { navigate(it.path); setSearchFocused(false); setMobileSearchOpen(false); setSearchVal(''); }}
                       className="w-full text-left flex items-center justify-between gap-3 p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
                     >
                       <div className="min-w-0">
@@ -281,6 +299,19 @@ export default function AdminHeader({ onMenuClick, sidebarOpen = false }) {
 
       {/* ── Right actions ── */}
       <div className="flex items-center gap-1.5 shrink-0">
+        {/* Mobile Search Button */}
+        <button
+          onClick={() => {
+            setMobileSearchOpen((o) => !o);
+            setTimeout(() => searchRef.current?.focus(), 150);
+          }}
+          className="sm:hidden relative w-9 h-9 rounded-xl flex items-center justify-center transition-colors duration-200"
+          style={{ color: 'var(--nb-text-muted)' }}
+          aria-label="Search dashboard"
+        >
+          <Search size={16} strokeWidth={1.8} />
+        </button>
+
         {/* Notifications */}
         <div className="relative" ref={notifRef}>
           <button

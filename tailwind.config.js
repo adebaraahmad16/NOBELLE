@@ -136,6 +136,9 @@ export default {
         'xs': '4px',
         '2xl': '40px',
       },
+      screens: {
+        'xs': '475px',
+      },
     },
   },
   plugins: [],
