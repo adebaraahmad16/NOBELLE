@@ -17,7 +17,7 @@ const BURGUNDY = '#641F2D';
 const BURGUNDY_RICH = '#7A2939';
 
 export default function AdminLoginPage() {
-  const { login, isAuthenticated } = useAdminAuth();
+  const { login, isAuthenticated, admin } = useAdminAuth();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
@@ -30,9 +30,9 @@ export default function AdminLoginPage() {
   // Redirect authenticated admins straight to the dashboard
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/admin', { replace: true });
+      navigate(admin?.permissions?.includes('VIEW_ANALYTICS')?'/admin':'/admin/settings?tab=account', { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, admin]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -45,8 +45,8 @@ export default function AdminLoginPage() {
 
     setLoading(true);
     try {
-      await login(email.trim(), password, rememberMe);
-      navigate('/admin', { replace: true });
+      const user=await login(email.trim(), password, rememberMe);
+      navigate(user.permissions?.includes('VIEW_ANALYTICS')?'/admin':'/admin/settings?tab=account', { replace: true });
     } catch (err) {
       if (err?.status === 0 || err?.status >= 500) {
         setError('Unable to sign in right now. Please try again.');
@@ -65,7 +65,7 @@ export default function AdminLoginPage() {
       <section
         className="relative lg:w-[52%] flex flex-col justify-between overflow-hidden"
         style={{
-          background: `linear-gradient(160deg, ${BURGUNDY_RICH} 0%, ${BURGUNDY} 45%, #551622 100%)`,
+          background: '#91364d',
           minHeight: '240px',
         }}
       >
@@ -74,7 +74,7 @@ export default function AdminLoginPage() {
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              'radial-gradient(ellipse 70% 55% at 18% 22%, rgba(217,139,151,0.10) 0%, transparent 60%), radial-gradient(ellipse 55% 45% at 85% 80%, rgba(100,31,45,0.9) 0%, transparent 70%)',
+              'none',
           }}
         />
 
@@ -146,7 +146,7 @@ export default function AdminLoginPage() {
         <div className="relative z-10 hidden lg:flex flex-col justify-center flex-1 px-14 pb-8">
           <div
             className="w-10 h-px mb-8"
-            style={{ background: 'linear-gradient(90deg, #D98B97, transparent)' }}
+            style={{ background: '#d98b97' }}
           />
           <p
             className="font-serif text-4xl leading-snug max-w-md"
@@ -179,7 +179,7 @@ export default function AdminLoginPage() {
       <section
         className="relative flex-1 flex items-center justify-center p-6 sm:p-10"
         style={{
-          background: 'linear-gradient(175deg, #FCFAF7 0%, #F8F3EC 100%)',
+          background: '#faf8f6',
         }}
       >
         <div className="w-full max-w-md">

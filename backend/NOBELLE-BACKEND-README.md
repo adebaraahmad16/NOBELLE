@@ -1,448 +1,56 @@
-# NOBELLE — Backend API
-
-Production-ready REST API for **NOBELLE**, a Nigerian women's ready-to-wear fashion e-commerce platform.
-
-This backend powers both the **customer frontend** and the **admin dashboard**. All business data — products, orders, payments, inventory, customers, analytics, and website content — is stored in and served from MySQL. There is no demo or hardcoded data anywhere in the system.
-
-```
- Customer Frontend  ──┐
-                      ├──►  REST API  ──►  MySQL
- Admin Dashboard   ──┘         │
-                               ├──► Paystack (payments)
-                               ├──► Object Storage (images)
-                               └──► Email Provider (transactional)
-```
-
----
-
-## Table of Contents
-
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [Getting Started](#getting-started)
-- [Environment Variables](#environment-variables)
-- [Database](#database)
-- [Running the Server](#running-the-server)
-- [API Overview](#api-overview)
-- [Authentication & Authorization](#authentication--authorization)
-- [Payments](#payments)
-- [File Uploads](#file-uploads)
-- [Response Format](#response-format)
-- [Testing](#testing)
-- [API Documentation](#api-documentation)
-- [Security](#security)
-- [Deployment](#deployment)
-- [Data Integrity Rules](#data-integrity-rules)
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Runtime | Node.js |
-| Framework | Express.js |
-| Language | TypeScript |
-| Database | MySQL (InnoDB) |
-| ORM | Prisma |
-| Auth | JWT access tokens + rotating refresh tokens |
-| Password hashing | Argon2 (bcrypt supported) |
-| Validation | Zod |
-| Payments | Paystack (provider-agnostic interface) |
-| File storage | Cloud object storage (S3-compatible) |
-| Email | Transactional email provider (SMTP) |
-| Real-time | Socket.IO |
-| Docs | Swagger / OpenAPI |
-
----
-
-## Project Structure
-
-```
-nobelle-backend/
-│
-├── src/
-│   ├── config/          Environment loading, constants, app configuration
-│   ├── controllers/     HTTP request/response handling only
-│   ├── middleware/      Auth, RBAC, rate limiting, error handling, uploads
-│   ├── routes/          Route definitions and API versioning
-│   ├── services/        Business logic (checkout, payments, inventory, etc.)
-│   ├── repositories/    Database access via Prisma
-│   ├── models/          Domain types and entity helpers
-│   ├── validators/      Zod schemas for body, query, params, files
-│   ├── utils/           Shared helpers (tokens, slugs, pricing, responses)
-│   ├── jobs/            Scheduled and background tasks
-│   ├── integrations/    Paystack, storage, email adapters
-│   ├── types/           Shared TypeScript definitions
-│   ├── app.ts           Express app assembly
-│   └── server.ts        Server bootstrap
-│
-├── prisma/
-│   ├── schema.prisma
-│   └── migrations/
-│
-├── tests/
-│
-├── .env.example
-├── package.json
-├── tsconfig.json
-└── README.md
-```
-
-Controllers handle HTTP. Services hold business rules. Repositories talk to the database. Validators guard the boundary. Keep these responsibilities separate.
-
----
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18 or later
-- MySQL 8.0 or later
-- A Paystack account (test keys are fine for development)
-- An S3-compatible storage bucket
-- SMTP credentials for a transactional email provider
+# NOBELLE commerce integration
 
-### Installation
+This workspace contains the Express/TypeScript API, MySQL schema and migration, and a staged copy of the customer/admin frontend in `frontend-integration/`. No business data is seeded. The existing MySQL `.env` connection settings are preserved.
 
-```bash
-git clone <repository-url>
-cd nobelle-backend
-npm install
-cp .env.example .env
-```
+## Configure and run
 
-Fill in `.env` with your own values before continuing.
+1. Install Node.js 22 or later and MySQL 8.0.16 or later. Run `npm ci`.
+2. Configure `.env` using `.env.example`. Generate two different random JWT secrets of at least 32 characters. Never commit `.env`.
+3. Set `DATABASE_URL` to your MySQL connection. Run `npm run prisma:generate` and `npm run prisma:deploy`. Use `npm run prisma:migrate -- --name change_name` for subsequent development changes.
+4. Supply `BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_PASSWORD` (12–72 characters), and `BOOTSTRAP_ADMIN_NAME`. Run `npm run seed:admin` once. Remove those variables afterward. There are no default credentials.
+5. Configure Paystack, Cloudinary, and SMTP. Run `npm run dev`, or `npm run build` followed by `npm start`.
+6. The frontend uses `VITE_API_URL=/api/v1`. In development, its Vite proxy targets `API_PROXY_TARGET` (default `http://127.0.0.1:5000`). In production, reverse-proxy `/api` to Express and serve the frontend under the same site.
 
----
+This initial migration creates a new MySQL schema. For an existing database with real records, back it up and review a baseline or data migration before deploying. Tables use utf8mb4_unicode_ci for case-insensitive searches. MySQL 8.0.16 or later is required to enforce CHECK constraints.
 
-## Environment Variables
+## Payments, stock and money
 
-Copy `.env.example` to `.env` and populate every field.
+Prices and totals are exact NGN `Decimal(12,2)` values. Calculations use Prisma Decimal, and gateway requests use integer kobo. Frontend prices and totals are never authoritative.
 
-```env
-DATABASE_URL=
+Checkout requires a client-generated UUID idempotency key, an owned or submitted Nigerian address, and a configured delivery zone. It reserves individual variants for 30 minutes and snapshots product identity, image, size, colour and price. Unpaid orders retain stock quantity; successful settlement deducts stock and releases the reservation in one serializable transaction. The worker releases expired reservations every 30 seconds.
 
-JWT_ACCESS_SECRET=
-JWT_REFRESH_SECRET=
+Set Paystack's webhook URL to `https://YOUR_API_HOST/api/v1/webhooks/paystack`. Signatures use `PAYSTACK_SECRET_KEY` and the exact received request bytes. Verification and webhooks share settlement checks for reference, email, amount, currency and status. Database uniqueness and serializable retries prevent duplicate stock deductions and critical notifications. A payment arriving after checkout cancellation creates a reconciliation notification; it does not fulfill unavailable inventory. Administrators must verify and refund these payments in Paystack.
 
-PAYSTACK_SECRET_KEY=
-PAYSTACK_PUBLIC_KEY=
+Payment references are persisted before gateway initialization. Pending initialization can be retried with the same reference. A server-verified failed payment allows a fresh attempt, with only one pending attempt per order enforced in MySQL. If Paystack accepted initialization but the local authorization URL could not be saved, reconcile that reference rather than create a second payment.
 
-STORAGE_PROVIDER=
-STORAGE_BUCKET=
-STORAGE_ACCESS_KEY=
-STORAGE_SECRET_KEY=
+## Sessions and security
 
-EMAIL_HOST=
-EMAIL_PORT=
-EMAIL_USER=
-EMAIL_PASSWORD=
-EMAIL_FROM=
+Access tokens live in frontend memory. Refresh tokens are random opaque tokens, hashed in MySQL, rotated atomically, and delivered through HttpOnly cookies. Production cookies are Secure and SameSite=Lax. The admin Remember me option controls persistent cookie expiry; otherwise the refresh cookie lasts for the browser session. Admin and customer cookies have separate paths. Browser write requests are restricted to configured frontend origins. Deploy frontend and API under the same site for these cookie semantics. Login, recovery, contact and newsletter operations have per-process rate limits; configure a shared gateway rate limit for multiple replicas. Set `TRUST_PROXY=1` only behind one trusted reverse proxy.
 
-FRONTEND_URL=
-ADMIN_URL=
+Product image uploads validate extension, MIME type, file signature and size (5 MB, at most 10 files). Cloudinary secrets stay on the API. Images can be ordered, made primary by placing first, and deleted from storage. Pending email jobs are durable and retry independently of payment settlement. SMTP offers at-least-once delivery: a worker crash after sending and before recording success can repeat an email. Critical database notifications remain exactly once.
 
-NODE_ENV=
-PORT=
-```
+## Tests and API documentation
 
-`DATABASE_URL` uses the MySQL connection format:
+`npm test` compiles and runs unit/HTTP checks and the MySQL integration suite. Configure `TEST_DATABASE_URL` to a dedicated database whose name ends in `_test`, deploy the migration there, then run `npm run test:integration`. Test fixtures are created only in that dedicated database; tests remove their own records and never truncate tables.
 
-```
-mysql://USER:PASSWORD@HOST:3306/nobelle
-```
+The integration suite exercises authentication, product updates, guest cart merging, coupons, stock validation, concurrent duplicate checkout, amount mismatch rejection, concurrent payment settlement, status transitions, return eligibility and exactly-once restocking. It does not claim to test Paystack or Cloudinary network behavior. Test those using provider test credentials and signed webhook delivery in staging.
 
-Append `?sslaccept=strict` when connecting to a managed MySQL instance that requires TLS.
+Development documentation is available at `/api/docs` and `/api/docs/openapi.json`; documentation is disabled in production. `GET /api/v1/health` is a liveness check. Startup verifies database connectivity. Structured request logs exclude query strings, cookies, tokens and bodies.
 
-**Rules:**
+## Deployment operations
 
-- `.env` is gitignored and must never be committed.
-- Secret keys are server-side only. Only `PAYSTACK_PUBLIC_KEY` may reach the browser.
-- Use different secrets per environment. Never reuse development secrets in production.
+Run migrations as a deployment step before starting replicas. Terminate TLS at the trusted reverse proxy, configure exact CORS origins, keep provider keys in a secret manager, and use a least-privilege database role. Configure MySQL backups, point-in-time recovery and periodic restore drills. Alert on failed email jobs, reconciliation notifications, repeated 5xx errors and low stock. Connect logs to your monitoring provider. Use a shared rate limiter at the gateway. Health checks should distinguish process liveness from database/provider readiness.
 
----
+## Verification status and remaining release requirements
 
-## Database
+The frontend changes have been applied to the parent project. Original files are backed up in `frontend-backup-20261005-160411/`; the staged source remains in `frontend-integration/` for review. The active customer routes and new admin workspace use API data; legacy admin page entry files delegate to the API-backed workspace and editor.
 
-### MySQL configuration
+A production release still requires configured MySQL and provider credentials, executed database tests, real customer/admin browser walkthroughs, mobile checks, and live provider staging checks. Provider-driven refunds, guest cart merging, sales/category/customer-growth reports, homepage/banner/section editing, and multi-collection assignment have been added, but have not been verified against configured MySQL and provider services. Refund timeouts deliberately require reconciliation before any resubmission. Do not call this deployment production-ready until those release requirements are completed and verified.
 
-Prisma connects with the `mysql` provider:
+Browser smoke checks exercised 20 desktop/mobile public and unauthorized route visits with no runtime exceptions or horizontal overflow. These checks used the existing unconfigured database environment and do not verify successful shopping or admin CRUD.
 
-```prisma
-datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
-}
-```
+Refunds cover the received merchandise value after proportional coupon discounts, rounded down to kobo; delivery charges are retained. Net revenue subtracts confirmed refunds from successful receipts, avoiding double subtraction when an order becomes Refunded.
 
-Requirements:
+The final production dependency audit reported zero advisories after updating Nodemailer and Multer and overriding the vulnerable deepmerge-ts dependency. Audit output is recorded in `dependency-audit-after.json`.
 
-- **MySQL 8.0+** — needed for `SELECT ... FOR UPDATE` with `SKIP LOCKED`, window functions used in analytics aggregation, and CTEs.
-- **InnoDB storage engine** on every table, for foreign keys and row-level locking.
-- **`utf8mb4` / `utf8mb4_unicode_ci`** charset and collation, so product names and customer messages handle the full Unicode range including emoji.
-- **Money columns** use `DECIMAL(12, 2)`, never `FLOAT` or `DOUBLE`. In Prisma this is `Decimal @db.Decimal(12, 2)`, mapped to a decimal library in application code — never to a JavaScript `number`.
-- **Timestamps** are stored in UTC as `DATETIME(3)` and converted at the presentation layer.
-
-Full-text search on product name and description uses a MySQL `FULLTEXT` index queried via `MATCH ... AGAINST`. Prisma exposes this through `$queryRaw` with parameter binding — never string interpolation.
-
-### Core entities
-
-`Admin` · `Customer` · `Product` · `ProductVariant` · `Category` · `Collection` · `ProductImage` · `Inventory` · `InventoryTransaction` · `Cart` · `CartItem` · `Wishlist` · `WishlistItem` · `Order` · `OrderItem` · `Payment` · `Coupon` · `CouponUsage` · `Review` · `Delivery` · `DeliveryZone` · `Return` · `ReturnItem` · `Notification` · `WebsiteContent` · `Banner` · `ContactMessage` · `Address` · `RefreshToken` · `ActivityLog`
-
-All tables carry `createdAt` and `updatedAt`. Entities that support soft deletion also carry `deletedAt`. Frequently filtered and searched columns are indexed.
-
-### Migrations
-
-```bash
-# Create and apply a migration in development
-npx prisma migrate dev --name <migration-name>
-
-# Apply migrations in production
-npx prisma migrate deploy
-
-# Regenerate the Prisma client
-npx prisma generate
-
-# Inspect data
-npx prisma studio
-```
-
-### Seeding
-
-There is **no business-data seed**. The database starts empty and stays empty until real records are created through the API.
-
-An optional development-only seed exists for creating a first admin account. It is disabled by default and must never run against production:
-
-```bash
-npm run seed:admin   # development only
-```
-
----
-
-## Running the Server
-
-```bash
-npm run dev      # development with hot reload
-npm run build    # compile TypeScript
-npm start        # run the compiled build
-npm run lint     # lint
-npm test         # run the test suite
-```
-
-Health check:
-
-```
-GET /api/health  →  { "status": "ok" }
-```
-
----
-
-## API Overview
-
-All routes are versioned under `/api/v1`.
-
-### Public / Customer
-
-| Area | Endpoints |
-|---|---|
-| Auth | `POST /auth/register` · `login` · `logout` · `refresh` · `forgot-password` · `reset-password` · `verify-email` · `GET /auth/me` |
-| Products | `GET /products` · `/products/:slug` · `/products/featured` · `/products/new-arrivals` · `/products/best-sellers` |
-| Categories | `GET /categories` · `/categories/:slug` |
-| Collections | `GET /collections` · `/collections/:slug` |
-| Cart | `GET /cart` · `POST /cart/items` · `PATCH /cart/items/:id` · `DELETE /cart/items/:id` · `DELETE /cart` |
-| Coupons | `POST /cart/apply-coupon` · `DELETE /cart/remove-coupon` |
-| Wishlist | `GET /wishlist` · `POST /wishlist/:productId` · `DELETE /wishlist/:productId` |
-| Addresses | `GET/POST /account/addresses` · `PATCH/DELETE /account/addresses/:id` |
-| Orders | `POST /orders` · `GET /orders` · `GET /orders/:id` |
-| Returns | `POST /orders/:orderId/return` · `GET /account/returns` |
-| Payments | `POST /payments/initialize` · `GET /payments/verify/:reference` · `POST /payments/webhook` |
-| Reviews | `POST /products/:productId/reviews` · `GET /products/:productId/reviews` |
-| Notifications | `GET /notifications` · `PATCH /notifications/:id/read` · `PATCH /notifications/read-all` |
-| Content | `GET /content/homepage` · `/content/about` · `/content/contact` · `GET /banners` |
-
-### Admin
-
-| Area | Endpoints |
-|---|---|
-| Auth | `POST /admin/auth/login` · `logout` · `refresh` · `forgot-password` · `reset-password` · `change-password` · `GET /admin/auth/me` |
-| Products | `GET/POST /admin/products` · `GET/PATCH/DELETE /admin/products/:id` |
-| Categories | `GET/POST /admin/categories` · `PATCH/DELETE /admin/categories/:id` |
-| Collections | `GET/POST /admin/collections` · `PATCH/DELETE /admin/collections/:id` |
-| Inventory | `GET /admin/inventory` · `/low-stock` · `/out-of-stock` · `PATCH /admin/inventory/:variantId` |
-| Orders | `GET /admin/orders` · `GET /admin/orders/:id` · `PATCH /admin/orders/:id/status` |
-| Customers | `GET /admin/customers` |
-| Payments | `GET /admin/payments` |
-| Coupons | `GET/POST /admin/coupons` · `PATCH/DELETE /admin/coupons/:id` |
-| Reviews | `GET /admin/reviews` · `PATCH/DELETE /admin/reviews/:id` |
-| Returns | `GET /admin/returns` · `PATCH /admin/returns/:id` |
-| Banners | `GET/POST /admin/banners` · `PATCH/DELETE /admin/banners/:id` |
-| Content | `PATCH /admin/content/homepage` · `/about` · `/contact` |
-| Dashboard | `GET /admin/dashboard` · `/sales` · `/orders` · `/products` · `/customers` |
-| Activity | `GET /admin/activity-logs` |
-
-### Pagination
-
-Every list endpoint accepts `?page=` and `?limit=` and returns:
-
-```json
-{
-  "data": [],
-  "pagination": { "page": 1, "limit": 20, "total": 0, "totalPages": 0 }
-}
-```
-
-### Filtering and search
-
-Product listing supports `search`, `category`, `collection`, `minPrice`, `maxPrice`, `size`, `color`, and `sort`. Admin orders and customers support `search` against order number, customer name, email, and phone. Filtering happens in the database, not the browser.
-
----
-
-## Authentication & Authorization
-
-Two separate authentication systems exist: one for customers, one for admins.
-
-- Access tokens are short-lived JWTs sent in the `Authorization: Bearer <token>` header.
-- Refresh tokens are stored server-side, rotated on every use, and revoked on logout.
-- Passwords are hashed with Argon2. Hashes are never returned by any endpoint.
-
-**Roles:** `ADMIN`, `CUSTOMER`
-
-Customers can only reach their own account, orders, addresses, cart, wishlist, reviews, and notifications. They cannot create or edit products, adjust prices or inventory, change order statuses, moderate reviews, manage coupons or content, view other customers, or read financial analytics. All `/admin/*` routes sit behind admin auth middleware.
-
----
-
-## Payments
-
-Paystack is integrated behind a provider interface so a second gateway can be added without rewriting checkout.
-
-```
-Checkout → pending order created
-         → Paystack transaction initialized
-         → customer pays
-         → webhook received and signature verified
-         → payment verified server-side
-         → order confirmed, inventory decremented, customer notified
-```
-
-Payment verification always happens server-side against Paystack. A frontend callback is treated as a hint to re-check, never as proof of payment. Webhook handling is idempotent: a replayed event cannot duplicate an order, a payment record, or an inventory reduction.
-
----
-
-## File Uploads
-
-Product, category, collection, banner, and profile images are uploaded to cloud object storage. MySQL stores only the storage key or URL.
-
-Uploads are validated for MIME type, extension, and file size. Only supported image formats are accepted; executables and unrecognised types are rejected.
-
----
-
-## Response Format
-
-Success:
-
-```json
-{ "success": true, "data": {}, "message": "Success" }
-```
-
-Error:
-
-```json
-{ "success": false, "message": "Validation failed", "errors": [] }
-```
-
-Handled status codes: `400`, `401`, `403`, `404`, `409`, `422`, `429`, `500`. Stack traces and raw database errors are never returned in production.
-
----
-
-## Testing
-
-```bash
-npm test
-npm run test:watch
-npm run test:coverage
-```
-
-Coverage focuses on the paths where correctness matters most:
-
-- **Auth** — registration, login, logout, password reset, rejection of unauthorized access
-- **Products** — create, update, archive, retrieve
-- **Cart** — add, update, remove, stock validation
-- **Checkout** — total calculation, coupon validation, stock validation
-- **Payments** — verification, webhook handling, duplicate-webhook protection
-- **Orders** — creation, status transitions, cancellation, refund
-- **Authorization** — customers blocked from every admin endpoint
-
----
-
-## API Documentation
-
-Swagger UI is served at:
-
-```
-/api/docs
-```
-
-It documents auth, products, categories, collections, inventory, cart, wishlist, orders, payments, coupons, reviews, customers, delivery, returns, admin, analytics, and website content.
-
----
-
-## Security
-
-Implemented across the stack:
-
-- Argon2 password hashing
-- JWT auth with refresh-token rotation and session revocation
-- Role-based authorization on every protected route
-- Zod validation of body, query, params, and uploads
-- Rate limiting, including stricter limits on auth endpoints
-- CORS restricted to `FRONTEND_URL` and `ADMIN_URL`
-- Helmet security headers
-- Secure, httpOnly cookies where cookies are used
-- Input sanitization
-- Parameterized queries via Prisma
-- File type and size validation
-- Centralized error handling that never leaks internals
-
----
-
-## Deployment
-
-1. Provision MySQL and configure `DATABASE_URL`.
-2. Set `NODE_ENV=production` and supply production secrets.
-3. Run `npx prisma migrate deploy`.
-4. Build with `npm run build` and start with `npm start`.
-5. Restrict CORS to the real frontend and admin origins.
-6. Terminate TLS at the proxy or load balancer.
-7. Configure automated backups (`mysqldump --single-transaction` or your provider's snapshots) and test a restore.
-8. Point `/api/health` at your uptime monitor.
-9. Connect your error monitoring service.
-10. Register the Paystack webhook URL in the Paystack dashboard.
-
-API versioning (`/api/v1`) allows future breaking changes to ship alongside the current version rather than replacing it.
-
----
-
-## Data Integrity Rules
-
-These are non-negotiable behaviours of the system:
-
-**No fake data.** No seeded products, customers, orders, payments, reviews, or statistics. An empty database returns zeros and empty arrays — the dashboard shows "No data available yet", tables show "No records found".
-
-**Prices are server-side.** Price, discount, subtotal, delivery fee, and total are always recalculated from current database values. Amounts sent by the client are ignored.
-
-**Order items are snapshots.** Product name, SKU, variant, size, colour, quantity, unit price, and line total are copied onto the order at purchase time, so later product edits never rewrite order history.
-
-**Inventory is transactional.** Checkout, refund, and cancellation run inside InnoDB transactions that lock the affected variant rows with `SELECT ... FOR UPDATE` before reading stock. Stock can never go negative, and two simultaneous buyers of the last unit resolve to exactly one sale.
-
-**Inventory is auditable.** Every change writes an `InventoryTransaction` recording type (`SALE`, `RESTOCK`, `ADJUSTMENT`, `RETURN`, `CANCELLATION`), quantity delta, previous and new quantity, reason, responsible user, and timestamp.
-
-**Admin actions are logged.** Product, inventory, order, coupon, banner, and settings changes are written to `ActivityLog` with admin, action, entity, entity ID, timestamp, and metadata.
-
-**Content is database-driven.** Hero sections, banners, about and contact content are managed by admins through the API, not hardcoded in the frontend.
-
----
-
-## License
-
-Proprietary. All rights reserved.
+MySQL conversion verification: Prisma validation, client generation, TypeScript build and 8 unit/HTTP tests pass. The database integration test is skipped until TEST_DATABASE_URL is set. The current DATABASE_URL was unreachable; the MySQL migration has not been applied. Cart ownership uses triggers because MySQL disallows CHECK constraints on columns with cascading foreign keys (https://dev.mysql.com/doc/refman/8.4/en/create-table-check-constraints.html).

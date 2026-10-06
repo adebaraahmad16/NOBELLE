@@ -1,0 +1,230 @@
+{
+  "target": "C:\\Users\\USER\\Desktop\\NOBELLE",
+  "files": [
+    {
+      "path": "src/App.jsx",
+      "originalHash": "df01aa4afb8650c04e40688e46c3ad3e51e29fa867e22e181ad94fc6b9cb3e98",
+      "stagedHash": "ee9d99ffd4f839849a0c8fde6238c2badfa29e26be7fa74e7d466469b9959c9a"
+    },
+    {
+      "path": "src/api/client.js",
+      "originalHash": null,
+      "stagedHash": "06db22a4bf840f7c13bf0e688ee218f3b827239dd625862f86d60152928efb47"
+    },
+    {
+      "path": "src/context/AdminAuthContext.jsx",
+      "originalHash": "1c7741c9bb4965d8610544246ddade9a4d8675008c6d8b8dba73c54ae1ebeae2",
+      "stagedHash": "9bb8454fc835a5c1a74688c9cf9e9490428210a2e2f9e9ddcfcdbf209f34b52b"
+    },
+    {
+      "path": "src/context/AdminDataContext.jsx",
+      "originalHash": "0904e93fbc0b4ec4acfb3a0b9656b84b32ba64d344f57458b47fbf3fe899132b",
+      "stagedHash": "4a3e7691d363634a65dafc1a6568c7b04e495c00737b737c176a9f0698822f8f"
+    },
+    {
+      "path": "src/context/CartContext.jsx",
+      "originalHash": "9a9966c0dc467e612bdda1c7eb58ccb637a14d6dbab53162557086646f6a1910",
+      "stagedHash": "9d789b846bf9d7e7fc2aa75ec490792869584e962cd5757c7d94755143e03dbb"
+    },
+    {
+      "path": "src/context/ProductContext.jsx",
+      "originalHash": "7d38cf25982c1684116427a553d6b476a97823e86afbd891e3a6926302fbac29",
+      "stagedHash": "2ae1a2f88091b6e5958af92bff7387287a5a400179c54d0cab47600c995513a3"
+    },
+    {
+      "path": "src/data/products.js",
+      "originalHash": "323ccdf12696c39910cfe20eba33b235c68d9e9f025645a8075524c5090a264b",
+      "stagedHash": "640ec85fa254422b0d73949f50d65ece170e13b1ba4a00cb2a78857d9e97dad9"
+    },
+    {
+      "path": "src/pages/AboutPage.jsx",
+      "originalHash": "4f3f0209828d8f5a8872e72874c5c4ed62fc3e3f0c021ccf06b3939586ea0a7b",
+      "stagedHash": "183e665cec19faffbb9e0c77a8657a26e63fd72e41fc90950f9c3f38639ad351"
+    },
+    {
+      "path": "src/pages/AccountPage.jsx",
+      "originalHash": null,
+      "stagedHash": "ca142d05a70c9ad2ca7c65a2179bbdda7f295b511c878ff4bc37a8b48fb705ca"
+    },
+    {
+      "path": "src/pages/CartPage.jsx",
+      "originalHash": "c037880877be17f44f0517e0e17b026db08026dc417e368c42c3d880b938d785",
+      "stagedHash": "4e3a9234519ed6f11e283d6b7737c2914cec9503f5674652280bfc6f9fde147e"
+    },
+    {
+      "path": "src/pages/CategoriesPage.jsx",
+      "originalHash": "2e3d6c5792eab2c7d49b004585448d5536998e4c4b9a58a5c3e3797f45e7d061",
+      "stagedHash": "a02becc00faf3625a8b8612f36e6992ff3d20fced92fc1e261ef726131720d11"
+    },
+    {
+      "path": "src/pages/CheckoutPage.jsx",
+      "originalHash": "83250d3ae780d9833dc2c1f23a2f5972fece99fd40c8d05eff8fa2be90182b58",
+      "stagedHash": "097be5bd38f8262de3a3f5ac6e7dfcda6af580736195f2ef032f7b3407929c08"
+    },
+    {
+      "path": "src/pages/ContactPage.jsx",
+      "originalHash": "521eeee5dedbe5d10f688110a82001d99e39a50d3767484e959783df10f48dd7",
+      "stagedHash": "35509ad09f227fb2d177858cc897c80a55541f4628f6b053c53d4fa5122984ad"
+    },
+    {
+      "path": "src/pages/HomePage.jsx",
+      "originalHash": "d9d950c6ade768ef5842bf3f6be54914fd855afa19684cfe0cea436d4fc4a0c7",
+      "stagedHash": "c9479a689a93f0a6f34433747083b77d5592d921c308f340dfe162830b5a0e3a"
+    },
+    {
+      "path": "src/pages/ProductDetailPage.jsx",
+      "originalHash": "af4e7ed44c0d8cabe1c2f08fadd1ba64d38cafdaf4ab0b41d81a25976895de07",
+      "stagedHash": "e599cf1ae1c7db51442874a188b29bf76bfba5dccd9aacb76b932de2db9d583b"
+    },
+    {
+      "path": "src/pages/ShopPage.jsx",
+      "originalHash": "f392e5b9762cfddd5cf7741b6a5f6d3da03ff40b59b1ca1eae2812505ba8517f",
+      "stagedHash": "e9b420628139bdc374454955e4c220c4d8032c7b2e090a472c8e03c4cbac7d24"
+    },
+    {
+      "path": "src/utils/api.js",
+      "originalHash": "ad803d564a4a8724b9cc59efa14cbf89b81d59c12de662af48bc45364c173eef",
+      "stagedHash": "35be7aaff7c57e32220d398271d1e4d4b152b575c2483a82df7341319f5df1ae"
+    },
+    {
+      "path": "src/utils/currency.js",
+      "originalHash": "426cd71f664969afbcfad3cb5379043cb7df451f3b0b79477e2ed7378f405f80",
+      "stagedHash": "2ae77a112daee931ebeaaa6bf26d6b813cc225f1bdceeabb4933a5ac8d73ef89"
+    },
+    {
+      "path": "src/pages/admin/AdminAddProductPage.jsx",
+      "originalHash": "123cedb05020623c5700c73e01d942e912bb55bc202dbbe252d3917846835428",
+      "stagedHash": "22deb079d1a82bdb71598891c8f49fbcdd1273e51b9cf52e4a9578ff35e2ec31"
+    },
+    {
+      "path": "src/pages/admin/AdminAnalyticsPage.jsx",
+      "originalHash": "97d644420c39d02bc729e44a233498bab89bbab843669a715e9b369d2e8a7996",
+      "stagedHash": "e4d7ba6e9c5e76f27f9e2f696e5e8664fc4cbb3e666faa2d9ed6679599aa0f6f"
+    },
+    {
+      "path": "src/pages/admin/AdminCategoriesPage.jsx",
+      "originalHash": "56c629bc05dcabc3e8a48c684d371037f8549f0c2576c90d16484560a5380424",
+      "stagedHash": "2f1739675b98e7c35b0d84239371696b98a16da31fd418711871a544450c53ca"
+    },
+    {
+      "path": "src/pages/admin/AdminCollectionsPage.jsx",
+      "originalHash": "cd6d62498ed71445cc352a8b686e974e72c506aa31fc19c1073ce71bd41a1ff1",
+      "stagedHash": "2f1739675b98e7c35b0d84239371696b98a16da31fd418711871a544450c53ca"
+    },
+    {
+      "path": "src/pages/admin/AdminCustomersPage.jsx",
+      "originalHash": "a90030b21975a4c04e8551f61e23d24fd60230c1f39ee5235df317f9b0da4318",
+      "stagedHash": "2f1739675b98e7c35b0d84239371696b98a16da31fd418711871a544450c53ca"
+    },
+    {
+      "path": "src/pages/admin/AdminDashboardPage.jsx",
+      "originalHash": "151a4c0f461683fa31ca60c01e2db4a1cc3111f697529e1da99b5d867c0aa1f2",
+      "stagedHash": "2f1739675b98e7c35b0d84239371696b98a16da31fd418711871a544450c53ca"
+    },
+    {
+      "path": "src/pages/admin/AdminDeliveryPage.jsx",
+      "originalHash": "376ff25cd5b0806185a1b44b089542cda90c4d92e5850f4401e11d85cba58a68",
+      "stagedHash": "8f4002f9de2a2d805190df9bffc4c0bbd5c89c08015bd295d7115afe0965e85a"
+    },
+    {
+      "path": "src/pages/admin/AdminDiscountsPage.jsx",
+      "originalHash": "d9ccd4fafbb921d6f335fdd5050062d117a684bac37f20f9910659203f19bc8d",
+      "stagedHash": "2f1739675b98e7c35b0d84239371696b98a16da31fd418711871a544450c53ca"
+    },
+    {
+      "path": "src/pages/admin/AdminEditProductPage.jsx",
+      "originalHash": "f3dc7cbf1c76de5d051b998369036ca7ad4fbdc5883afbd8d94df83b7e6646da",
+      "stagedHash": "22deb079d1a82bdb71598891c8f49fbcdd1273e51b9cf52e4a9578ff35e2ec31"
+    },
+    {
+      "path": "src/pages/admin/AdminInventoryPage.jsx",
+      "originalHash": "40a29293f9fdccd51fa27dd4ca72b0e7d79745cfc206efdf8c85612902da3154",
+      "stagedHash": "2f1739675b98e7c35b0d84239371696b98a16da31fd418711871a544450c53ca"
+    },
+    {
+      "path": "src/pages/admin/AdminNotificationsPage.jsx",
+      "originalHash": "b4f69601165f123fa645dada2ed1540edec4f6efa0d2c03da17e5a3a6bfa5450",
+      "stagedHash": "2f1739675b98e7c35b0d84239371696b98a16da31fd418711871a544450c53ca"
+    },
+    {
+      "path": "src/pages/admin/AdminOrdersPage.jsx",
+      "originalHash": "ac6e09e8ce6b2a8bb3e27a0faf33716ffb90043a79e8aeb8984c4b9c5d078a65",
+      "stagedHash": "2f1739675b98e7c35b0d84239371696b98a16da31fd418711871a544450c53ca"
+    },
+    {
+      "path": "src/pages/admin/AdminPaymentsPage.jsx",
+      "originalHash": "2f344b246c994fe2bdcdefa1d3a527a2bd63f29aa02c69c7779fd65b7a187da6",
+      "stagedHash": "2f1739675b98e7c35b0d84239371696b98a16da31fd418711871a544450c53ca"
+    },
+    {
+      "path": "src/pages/admin/AdminProductsPage.jsx",
+      "originalHash": "2cad48e92e8fe9e4ec422bc9ab3d98d03ee4a5937c6d31ac53c78630fb950c64",
+      "stagedHash": "2f1739675b98e7c35b0d84239371696b98a16da31fd418711871a544450c53ca"
+    },
+    {
+      "path": "src/pages/admin/AdminProfilePage.jsx",
+      "originalHash": "0a48fe40d925df9c5f651da664747ee8d523dec706f21b80aa8136cd2084f47b",
+      "stagedHash": "2f1739675b98e7c35b0d84239371696b98a16da31fd418711871a544450c53ca"
+    },
+    {
+      "path": "src/pages/admin/AdminResetPasswordPage.jsx",
+      "originalHash": "65b90aea0f2c823922310ff8c10b22a864015c0fe877f2842e2f780bff9f8276",
+      "stagedHash": "5885bb7457a4cb361529e772ef1c405fea2543d0e50edc33ed3b330c78cb37ca"
+    },
+    {
+      "path": "src/pages/admin/AdminResourcePage.jsx",
+      "originalHash": null,
+      "stagedHash": "4c49915d8a6b645479aea735ca9280133c8dfee980b0f63a42a9fdb28420597f"
+    },
+    {
+      "path": "src/pages/admin/AdminReturnsPage.jsx",
+      "originalHash": "ba0310ec7d7338aa3c16c288e1e82eb9b5d619f59f232c48e00dfbeb4bfe2674",
+      "stagedHash": "2f1739675b98e7c35b0d84239371696b98a16da31fd418711871a544450c53ca"
+    },
+    {
+      "path": "src/pages/admin/AdminReviewsPage.jsx",
+      "originalHash": "98e7a91d654edc51e016c079d302055d31fc523d3f9086813f990d7f3b30586a",
+      "stagedHash": "2f1739675b98e7c35b0d84239371696b98a16da31fd418711871a544450c53ca"
+    },
+    {
+      "path": "src/pages/admin/AdminSettingsPage.jsx",
+      "originalHash": "88fe1f85a87b0bd5a3d3260e81d42c1863cbde49aba2ef6401a61318da6a2d70",
+      "stagedHash": "2f1739675b98e7c35b0d84239371696b98a16da31fd418711871a544450c53ca"
+    },
+    {
+      "path": "src/pages/admin/AdminWebsitePage.jsx",
+      "originalHash": "357f7b775240a1e02e9305ca8ccd1a4a0e38f10bc529db7eda1bea92a56246da",
+      "stagedHash": "2f1739675b98e7c35b0d84239371696b98a16da31fd418711871a544450c53ca"
+    },
+    {
+      "path": "src/pages/admin/ProductEditorPage.jsx",
+      "originalHash": null,
+      "stagedHash": "1d9d90d33c1440191684648400ed22ffa42b52550ca66ae0152f5fc17592563f"
+    },
+    {
+      "path": "src/components/layout/Footer.jsx",
+      "originalHash": "2e23193b7ef5c8937be657865b5a1ae2ddfcc33a9e8765f20f45ccace4fa98cb",
+      "stagedHash": "922d11e6e9063db570b62839a55606bfd29d7ac244d4cf5ba7680ff289c55300"
+    },
+    {
+      "path": "src/components/layout/Header.jsx",
+      "originalHash": "495bb44f2e26c412231343452c5e545ad3f44b8eec955a6d557105461873077e",
+      "stagedHash": "75557796d222b0083be503c1d64aa411f11e9cbf849e40a44d4369642d2eaeed"
+    },
+    {
+      "path": "src/components/ui/ProductCard.jsx",
+      "originalHash": "1b442e8aba3361116a22329d87a87bf659cb8a1cce537b6938dfc9c75b4d01ff",
+      "stagedHash": "4507fa1b4230db508b5ac043fb7e2873e9afac959bdd394f59ca7220db718c88"
+    },
+    {
+      "path": "vite.config.js",
+      "originalHash": "4d36db3522a7b2dd10e0936e1004373c7ee65f10f7cd7920cd76410459c15a45",
+      "stagedHash": "cf0cd5f720df8bfbbaca826b8d2b37ae81fc8e415af6303855cbda39465b5f2b"
+    },
+    {
+      "path": ".env.example",
+      "originalHash": null,
+      "stagedHash": "223a64449d31f68e21272aba301a3fb60071fff599686f9abb201a146f6c6087"
+    }
+  ]
+}

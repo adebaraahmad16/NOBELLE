@@ -1,3 +1,5 @@
+import { page } from './customer.controller';
+import { InventoryService } from '../services/inventory.service';
 import { Request, Response, NextFunction } from 'express';
 import { OrderService } from '../services/order.service';
 import { DashboardService } from '../services/dashboard.service';
@@ -34,9 +36,10 @@ export class AdminController {
     }
   }
 
-  static async listCustomers(_req: Request, res: Response, next: NextFunction) {
+  static async listCustomers(req: Request, res: Response, next: NextFunction) {
     try {
       const customers = await prisma.customer.findMany({
+        ...page(req),
         where: { deletedAt: null },
         select: {
           id: true,
@@ -44,6 +47,7 @@ export class AdminController {
           firstName: true,
           lastName: true,
           phone: true,
+          isActive: true,
           createdAt: true,
           _count: { select: { orders: true } },
         },
@@ -55,9 +59,10 @@ export class AdminController {
     }
   }
 
-  static async listInventory(_req: Request, res: Response, next: NextFunction) {
+  static async listInventory(req: Request, res: Response, next: NextFunction) {
     try {
       const inventory = await prisma.inventory.findMany({
+        skip: page(req).skip, take: page(req).take,
         include: {
           variant: {
             include: { product: true },
@@ -72,30 +77,7 @@ export class AdminController {
 
   static async updateInventory(req: Request, res: Response, next: NextFunction) {
     try {
-      const { quantity, reason } = req.body;
-      const current = await prisma.inventory.findUnique({
-        where: { variantId: req.params.variantId },
-      });
-      const previousQty = current?.quantity ?? 0;
-
-      const updated = await prisma.inventory.upsert({
-        where: { variantId: req.params.variantId },
-        create: { variantId: req.params.variantId, quantity },
-        update: { quantity },
-      });
-
-      await prisma.inventoryTransaction.create({
-        data: {
-          inventoryId: updated.id,
-          type: 'ADJUSTMENT',
-          delta: quantity - previousQty,
-          previousQty,
-          newQty: quantity,
-          reason: reason || 'Admin manual adjustment',
-          recordedBy: req.admin?.email,
-        },
-      });
-
+      const updated = await InventoryService.adjust(req.params.variantId, req.body.quantity, req.body.reason, req.admin!.id);
       return ApiResponse.success(res, updated, 'Inventory updated successfully');
     } catch (error) {
       next(error);
@@ -114,6 +96,7 @@ export class AdminController {
   static async createCoupon(req: Request, res: Response, next: NextFunction) {
     try {
       const coupon = await CouponService.createCoupon(req.body);
+      await prisma.activityLog.create({ data: { adminId: req.admin!.id, action: 'CREATE_COUPON', entity: 'Coupon', entityId: coupon.id } });
       return ApiResponse.created(res, coupon);
     } catch (error) {
       next(error);
@@ -124,16 +107,17 @@ export class AdminController {
     try {
       const { slug } = req.params;
       const content = await ContentService.updateContent(slug, req.body.data);
+      await prisma.activityLog.create({ data: { adminId: req.admin!.id, action: 'UPDATE_WEBSITE_CONTENT', entity: 'WebsiteContent', entityId: content.id } });
       return ApiResponse.success(res, content, 'Content updated');
     } catch (error) {
       next(error);
     }
   }
 
-  static async listActivityLogs(_req: Request, res: Response, next: NextFunction) {
+  static async listActivityLogs(req: Request, res: Response, next: NextFunction) {
     try {
       const logs = await prisma.activityLog.findMany({
-        take: 50,
+        ...page(req),
         orderBy: { createdAt: 'desc' },
         include: { admin: { select: { name: true, email: true } } },
       });

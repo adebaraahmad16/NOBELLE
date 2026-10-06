@@ -3,6 +3,8 @@ import { Server as SocketIOServer } from 'socket.io';
 import app from './app';
 import { ENV } from './config/env';
 import prisma from './repositories/prisma';
+import { validateEnvironment } from './config/validateEnv';
+import { runJobs } from './jobs/worker';
 
 const server = http.createServer(app);
 
@@ -12,9 +14,6 @@ export const io = new SocketIOServer(server, {
     origin: [
       ENV.FRONTEND_URL,
       ENV.ADMIN_URL,
-      'http://localhost:5173',
-      'http://localhost:5174',
-      'http://localhost:5175',
     ],
     credentials: true,
   },
@@ -31,7 +30,12 @@ io.on('connection', (socket) => {
   });
 });
 
+let workerTimer: NodeJS.Timeout | undefined;
 async function bootstrap() {
+  validateEnvironment();
+  await prisma.$connect();
+  workerTimer = setInterval(() => runJobs().catch(() => console.error('Background worker failed')), 30000);
+  workerTimer.unref();
   server.listen(ENV.PORT, () => {
     console.log(`========================================`);
     console.log(`?? NOBELLE Backend API running on port ${ENV.PORT}`);
@@ -41,17 +45,21 @@ async function bootstrap() {
   });
 }
 
-// Graceful shutdown
+let stopping = false;
 const shutdown = async () => {
-  console.log('Shutting down server gracefully...');
+  if (stopping) return;
+  stopping = true;
+  if (workerTimer) clearInterval(workerTimer);
+  const deadline = setTimeout(() => { server.closeAllConnections(); process.exit(1); }, 15000);
+  deadline.unref();
+  io.disconnectSockets(true);
+  await new Promise<void>(resolve => server.close(() => resolve()));
+  io.close();
   await prisma.$disconnect();
-  server.close(() => {
-    console.log('Server closed.');
-    process.exit(0);
-  });
+  clearTimeout(deadline);
+  process.exit(0);
 };
+process.on('SIGINT', () => shutdown().catch(() => process.exit(1)));
+process.on('SIGTERM', () => shutdown().catch(() => process.exit(1)));
 
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
-
-bootstrap();
+bootstrap().catch((err) => { console.error('Startup failed:', err?.message ?? err); process.exitCode = 1; });

@@ -1,3 +1,5 @@
+import { publicSession, refreshCookie, clearSessionCookie } from '../utils/sessionCookie';
+import { SessionService } from '../services/session.service';
 import { Request, Response, NextFunction } from 'express';
 import { AdminAuthService } from '../services/adminAuth.service';
 import { ApiResponse } from '../utils/apiResponse';
@@ -5,9 +7,9 @@ import { ApiResponse } from '../utils/apiResponse';
 export class AdminAuthController {
   static async login(req: Request, res: Response, next: NextFunction) {
     try {
-      const { email, password } = req.body;
-      const result = await AdminAuthService.login(email, password);
-      return ApiResponse.success(res, result, 'Admin login successful');
+      const { email, password, remember } = req.body;
+      const result = await AdminAuthService.login(email, password, remember, req.get('user-agent'));
+      return ApiResponse.success(res, publicSession(res, result, true), 'Admin login successful');
     } catch (error) {
       next(error);
     }
@@ -15,9 +17,9 @@ export class AdminAuthController {
 
   static async refreshToken(req: Request, res: Response, next: NextFunction) {
     try {
-      const { refreshToken } = req.body;
-      const result = await AdminAuthService.refreshToken(refreshToken);
-      return ApiResponse.success(res, result, 'Admin token refreshed');
+      const refreshToken = refreshCookie(req, true);
+      const result = await SessionService.rotate(refreshToken, true);
+      return ApiResponse.success(res, publicSession(res, result, true), 'Admin token refreshed');
     } catch (error) {
       next(error);
     }
@@ -25,8 +27,9 @@ export class AdminAuthController {
 
   static async logout(req: Request, res: Response, next: NextFunction) {
     try {
-      const { refreshToken } = req.body;
+      const refreshToken = refreshCookie(req, true);
       await AdminAuthService.logout(refreshToken);
+      clearSessionCookie(res, true);
       return ApiResponse.success(res, null, 'Admin logged out');
     } catch (error) {
       next(error);
@@ -46,7 +49,7 @@ export class AdminAuthController {
     try {
       const { email } = req.body;
       const result = await AdminAuthService.forgotPassword(email);
-      return ApiResponse.success(res, result, 'If an admin account exists for that email, a reset link has been sent.');
+      return ApiResponse.success(res, result, 'If an admin account exists for that email, reset instructions will be emailed.');
     } catch (error) {
       next(error);
     }

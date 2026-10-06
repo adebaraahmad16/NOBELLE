@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 export const createOrderSchema = z.object({
   body: z.object({
+    idempotencyKey: z.string().uuid(),
     addressId: z.string().uuid().optional(),
     shippingAddress: z
       .object({
@@ -14,7 +15,7 @@ export const createOrderSchema = z.object({
       })
       .optional(),
     couponCode: z.string().optional(),
-    deliveryZoneId: z.string().uuid().optional(),
+    deliveryZoneId: z.string().uuid(),
     notes: z.string().optional(),
   }),
 });
@@ -24,6 +25,6 @@ export const updateOrderStatusSchema = z.object({
     id: z.string().uuid(),
   }),
   body: z.object({
-    status: z.enum(['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'RETURNED']),
+    status: z.enum(['PROCESSING', 'PACKED', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED', 'CANCELLED']),
   }),
 });

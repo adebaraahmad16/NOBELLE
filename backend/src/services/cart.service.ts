@@ -1,50 +1,24 @@
+import { SettingsService } from './settings.service';
+import { TokenUtil } from '../utils/token';
+import { serializable } from '../database/transaction';
+import { money } from '../utils/money';
 import prisma from '../repositories/prisma';
 import { ApiError } from '../utils/apiError';
 
 export class CartService {
   static async getOrCreateCart(customerId: string) {
-    let cart = await prisma.cart.findUnique({
-      where: { customerId },
-      include: {
-        items: {
-          include: {
-            variant: {
-              include: {
-                product: { include: { images: true } },
-                inventory: true,
-              },
-            },
-          },
-        },
-      },
+    const cart = await prisma.cart.upsert({ where: ownerWhere(customerId), create: ownerWhere(customerId), update: { updatedAt: new Date() },
+      include: { items: { include: { variant: { include: { product: { include: { images: true } }, inventory: true } } } } },
     });
 
-    if (!cart) {
-      cart = await prisma.cart.create({
-        data: { customerId },
-        include: {
-          items: {
-            include: {
-              variant: {
-                include: {
-                  product: { include: { images: true } },
-                  inventory: true,
-                },
-              },
-            },
-          },
-        },
-      });
-    }
-
     // Calculate subtotal from current database prices
-    let subtotal = 0;
+    let subtotal = money(0);
     const items = cart.items.map((item) => {
-      const basePrice = Number(item.variant.product.price);
-      const diff = Number(item.variant.priceDiff);
-      const unitPrice = basePrice + diff;
-      const lineTotal = unitPrice * item.quantity;
-      subtotal += lineTotal;
+      const basePrice = money(item.variant.product.price);
+      const diff = money(item.variant.priceDiff);
+      const unitPrice = basePrice.add(diff);
+      const lineTotal = unitPrice.mul(item.quantity);
+      subtotal = subtotal.add(lineTotal);
 
       return {
         id: item.id,
@@ -58,7 +32,7 @@ export class CartService {
         unitPrice,
         lineTotal,
         image: item.variant.product.images[0]?.url || null,
-        availableStock: item.variant.inventory?.quantity ?? 0,
+        availableStock: (item.variant.inventory ? item.variant.inventory.quantity - item.variant.inventory.reserved : 0),
       };
     });
 
@@ -71,23 +45,26 @@ export class CartService {
   }
 
   static async addItem(customerId: string, variantId: string, quantity: number) {
+    await serializable(async (prisma) => {
+    const {settings}=await SettingsService.get(prisma);
+    if(settings.general.status==='MAINTENANCE')throw ApiError.conflict(settings.general.maintenanceMessage);
     const variant = await prisma.productVariant.findUnique({
       where: { id: variantId },
       include: { inventory: true, product: true },
     });
 
-    if (!variant || variant.product.deletedAt || !variant.product.isActive) {
+    if (!variant || !variant.isActive || variant.product.deletedAt || !variant.product.isActive) {
       throw ApiError.notFound('Product variant not found');
     }
 
-    const currentStock = variant.inventory?.quantity ?? 0;
-    if (currentStock < quantity) {
+    const currentStock = (variant.inventory ? variant.inventory.quantity - variant.inventory.reserved : 0);
+    if (!settings.products.allowOutOfStockPurchases && currentStock < quantity) {
       throw ApiError.badRequest(`Insufficient stock. Only ${currentStock} item(s) available.`);
     }
 
     const cart = await prisma.cart.upsert({
-      where: { customerId },
-      create: { customerId },
+      where: ownerWhere(customerId),
+      create: ownerWhere(customerId),
       update: {},
     });
 
@@ -102,7 +79,7 @@ export class CartService {
 
     if (existingItem) {
       const newQty = existingItem.quantity + quantity;
-      if (newQty > currentStock) {
+      if (!settings.products.allowOutOfStockPurchases && newQty > currentStock) {
         throw ApiError.badRequest(`Cannot add more. Exceeds available stock of ${currentStock}.`);
       }
       await prisma.cartItem.update({
@@ -119,24 +96,29 @@ export class CartService {
       });
     }
 
+    });
     return this.getOrCreateCart(customerId);
   }
 
   static async updateItemQuantity(customerId: string, cartItemId: string, quantity: number) {
+    await serializable(async (prisma) => {
+    const {settings}=await SettingsService.get(prisma);
+    if(settings.general.status==='MAINTENANCE')throw ApiError.conflict(settings.general.maintenanceMessage);
     const item = await prisma.cartItem.findUnique({
       where: { id: cartItemId },
       include: {
         cart: true,
-        variant: { include: { inventory: true } },
+        variant: { include: { inventory: true, product: true } },
       },
     });
 
-    if (!item || item.cart.customerId !== customerId) {
+    if (!item || !ownsCart(item.cart, customerId)) {
       throw ApiError.notFound('Cart item not found');
     }
 
-    const currentStock = item.variant.inventory?.quantity ?? 0;
-    if (quantity > currentStock) {
+    if (!item.variant.isActive || !item.variant.product.isActive || item.variant.product.deletedAt) throw ApiError.badRequest('Product is unavailable');
+    const currentStock = (item.variant.inventory ? item.variant.inventory.quantity - item.variant.inventory.reserved : 0);
+    if (!settings.products.allowOutOfStockPurchases && quantity > currentStock) {
       throw ApiError.badRequest(`Requested quantity exceeds available stock (${currentStock})`);
     }
 
@@ -145,6 +127,7 @@ export class CartService {
       data: { quantity },
     });
 
+    });
     return this.getOrCreateCart(customerId);
   }
 
@@ -154,7 +137,7 @@ export class CartService {
       include: { cart: true },
     });
 
-    if (!item || item.cart.customerId !== customerId) {
+    if (!item || !ownsCart(item.cart, customerId)) {
       throw ApiError.notFound('Cart item not found');
     }
 
@@ -163,10 +146,36 @@ export class CartService {
   }
 
   static async clearCart(customerId: string) {
-    const cart = await prisma.cart.findUnique({ where: { customerId } });
+    const cart = await prisma.cart.findUnique({ where: ownerWhere(customerId) });
     if (cart) {
       await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
     }
     return { items: [], subtotal: 0, totalItems: 0 };
   }
+  static async mergeGuest(customerId: string, token: string | null) {
+    if (!token) return;
+    await serializable(async tx => {
+      const {settings}=await SettingsService.get(tx);
+      const guest = await tx.cart.findUnique({ where: { guestTokenHash: TokenUtil.hashToken(token) }, include: { items: { include: { variant: { include: { product: true, inventory: true } } } } } });
+      if (!guest) return;
+      const customer = await tx.cart.upsert({ where: { customerId }, create: { customerId }, update: {} });
+      for (const item of guest.items) {
+        if (!item.variant.isActive || !item.variant.product.isActive || item.variant.product.deletedAt) continue;
+        const existing = await tx.cartItem.findUnique({ where: { cartId_variantId: { cartId: customer.id, variantId: item.variantId } } });
+        const stock = item.variant.inventory ? item.variant.inventory.quantity - item.variant.inventory.reserved : 0;
+        const quantity = Math.min(settings.products.allowOutOfStockPurchases?99:stock, (existing?.quantity || 0) + item.quantity);
+        if (quantity > 0) await tx.cartItem.upsert({ where: { cartId_variantId: { cartId: customer.id, variantId: item.variantId } },
+          create: { cartId: customer.id, variantId: item.variantId, quantity }, update: { quantity } });
+      }
+      await tx.cart.delete({ where: { id: guest.id } });
+    });
+  }
+
+}
+
+function ownerWhere(owner: string): { customerId: string; guestTokenHash?: never } | { guestTokenHash: string; customerId?: never } {
+  return owner.startsWith('guest:') ? { guestTokenHash: owner.slice(6) } : { customerId: owner };
+}
+function ownsCart(cart: { customerId: string | null; guestTokenHash: string | null }, owner: string) {
+  return owner.startsWith('guest:') ? cart.guestTokenHash === owner.slice(6) : cart.customerId === owner;
 }

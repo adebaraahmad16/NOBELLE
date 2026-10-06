@@ -17,40 +17,10 @@ function AnimatedSection({ children, className = '' }) {
 }
 
 // ── Nigerian Collections editorial strip ──────────────────────────────────
-const NIGERIAN_COLLECTIONS = [
-  {
-    id: 'ankara',
-    label: 'The Ankara Edit',
-    tagline: 'Bold prints. Beautiful silhouettes.',
-    image: '/images/ankara_edit_banner.jpg',
-    href: '/shop',
-  },
-  {
-    id: 'lace',
-    label: 'Lace Collection',
-    tagline: 'Elegance for every celebration.',
-    image: '/images/lace_collection_banner.jpg',
-    href: '/shop',
-  },
-  {
-    id: 'occasion',
-    label: 'Occasion Wear',
-    tagline: 'Made for celebrations that matter.',
-    image: '/images/occasion_wear_banner.jpg',
-    href: '/shop',
-  },
-  {
-    id: 'everyday',
-    label: 'Everyday Naija',
-    tagline: 'Stylish, effortless, authentically you.',
-    image: '/images/everyday_naija_banner.jpg',
-    href: '/shop',
-  },
-];
-
 export default function HomePage() {
   const { products } = useProducts();
-  const { cms } = useAdminData();
+  const { cms, collections } = useAdminData();
+  const NIGERIAN_COLLECTIONS = collections.filter(c => !cms.homepage?.featuredCollectionIds?.length || cms.homepage.featuredCollectionIds.includes(c.id)).map(c => ({ id: c.id, label: c.name, tagline: c.description, image: c.imageUrl, href: `/shop?collection=${encodeURIComponent(c.slug)}` }));
   const home = cms?.homepage || {};
 
   const activeProducts = products.filter((p) => p.status !== 'Draft' && p.status !== 'Archived');
@@ -233,6 +203,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {home.sections?.map(section => <section key={section.id} className="section-padding"><div className="container-custom"><h2 className="font-serif text-3xl mb-4">{section.data.heading}</h2><p className="whitespace-pre-wrap">{section.data.description}</p>{section.data.imageUrl && <img className="w-full max-w-2xl my-6" src={section.data.imageUrl} alt={section.data.heading} />}{section.data.linkUrl && <Link className="btn-primary mt-4" to={section.data.linkUrl}>Explore</Link>}</div></section>)}
       {/* ===== NEWSLETTER ===== */}
       <section className="section-padding bg-brand-beige">
         <div className="container-custom max-w-2xl text-center">
@@ -261,12 +232,13 @@ function NewsletterForm() {
   const [done, setDone] = useState(false);
   const { addSubscriber } = useAdminData();
 
-  const submit = (e) => {
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const submit = async (e) => {
     e.preventDefault();
     if (!email.trim()) return;
-    addSubscriber(email.trim(), 'Homepage');
-    setDone(true);
-    setEmail('');
+    setBusy(true); setError('');
+    try { await addSubscriber(email.trim(), 'Homepage'); setDone(true); setEmail(''); } catch(e) { setError(e.message); } finally { setBusy(false); }
   };
 
   if (done) {
@@ -283,7 +255,8 @@ function NewsletterForm() {
         className="input-field flex-1"
         required
       />
-      <button type="submit" className="btn-primary whitespace-nowrap">
+      {error && <p role="alert">{error}</p>}
+      <button type="submit" disabled={busy} className="btn-primary whitespace-nowrap">
         Subscribe
       </button>
     </form>

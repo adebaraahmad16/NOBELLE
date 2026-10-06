@@ -1,8 +1,9 @@
+import { money, couponDiscount } from '../utils/money';
 import prisma from '../repositories/prisma';
 import { ApiError } from '../utils/apiError';
 
 export class CouponService {
-  static async validateCoupon(code: string, subtotal: number) {
+  static async validateCoupon(code: string, subtotal: import('@prisma/client').Prisma.Decimal.Value) {
     const coupon = await prisma.coupon.findUnique({
       where: { code: code.toUpperCase() },
     });
@@ -23,19 +24,11 @@ export class CouponService {
       throw ApiError.badRequest('Coupon usage limit reached');
     }
 
-    if (coupon.minSpend && subtotal < Number(coupon.minSpend)) {
+    if (coupon.minSpend && money(subtotal).lt(coupon.minSpend)) {
       throw ApiError.badRequest(`Minimum spend of ?${coupon.minSpend} required for this coupon`);
     }
 
-    let discount = 0;
-    if (coupon.discountType === 'PERCENTAGE') {
-      discount = (subtotal * Number(coupon.value)) / 100;
-      if (coupon.maxDiscount && discount > Number(coupon.maxDiscount)) {
-        discount = Number(coupon.maxDiscount);
-      }
-    } else {
-      discount = Number(coupon.value);
-    }
+    const discount = couponDiscount(money(subtotal), coupon);
 
     return {
       coupon: {
@@ -44,7 +37,7 @@ export class CouponService {
         discountType: coupon.discountType,
         value: Number(coupon.value),
       },
-      discount: Math.min(discount, subtotal),
+      discount: discount,
     };
   }
 
@@ -61,6 +54,7 @@ export class CouponService {
         minSpend: data.minSpend,
         maxDiscount: data.maxDiscount,
         usageLimit: data.usageLimit,
+        perCustomerLimit: data.perCustomerLimit,
         startsAt: data.startsAt ? new Date(data.startsAt) : null,
         expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
         isActive: data.isActive ?? true,

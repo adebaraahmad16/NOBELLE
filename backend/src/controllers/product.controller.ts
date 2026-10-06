@@ -50,7 +50,7 @@ export class ProductController {
 
   static async create(req: Request, res: Response, next: NextFunction) {
     try {
-      const product = await ProductService.createProduct(req.body);
+      const product = await ProductService.createProduct(req.body, req.admin!.id);
       return ApiResponse.created(res, product, 'Product created successfully');
     } catch (error) {
       next(error);
@@ -60,6 +60,7 @@ export class ProductController {
   static async update(req: Request, res: Response, next: NextFunction) {
     try {
       const product = await ProductService.updateProduct(req.params.id, req.body);
+      await (await import('../repositories/prisma')).default.activityLog.create({ data: { adminId: req.admin!.id, action: 'UPDATE_PRODUCT', entity: 'Product', entityId: product.id } });
       return ApiResponse.success(res, product, 'Product updated successfully');
     } catch (error) {
       next(error);

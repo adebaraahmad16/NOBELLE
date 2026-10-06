@@ -1,3 +1,6 @@
+import { AdminNotificationService } from './adminNotification.service';
+import { randomBytes } from 'crypto';
+import { ENV } from '../config/env';
 import prisma from '../repositories/prisma';
 import { PasswordUtil } from '../utils/password';
 import { TokenUtil } from '../utils/token';
@@ -48,10 +51,16 @@ export class AuthService {
       },
     });
 
+    const verificationToken = randomBytes(32).toString('hex');
+    await prisma.$transaction([
+      prisma.emailVerificationToken.create({ data: { customerId: customer.id, tokenHash: TokenUtil.hashToken(verificationToken), expiresAt: new Date(Date.now() + 86400_000) } }),
+      prisma.emailJob.create({ data: { key: `welcome:${customer.id}`, recipient: customer.email, subject: 'Welcome to NOBELLE', html: `<p>Welcome to NOBELLE. <a href="${ENV.FRONTEND_URL}/account?verify=${verificationToken}">Verify your email</a>.</p>` } }),
+    ]);
+    await AdminNotificationService.emit('newCustomer','New customer','A new customer account was created.','/admin/customers',customer.id);
     return { customer, accessToken, refreshToken: rawRefreshToken };
   }
 
-  static async login(email: string, password: string) {
+  static async login(email: string, password: string, remember = false) {
     const customer = await prisma.customer.findUnique({
       where: { email: email.toLowerCase() },
     });
@@ -78,7 +87,7 @@ export class AuthService {
         userId: customer.id,
         userType: 'CUSTOMER',
         customerId: customer.id,
-        expiresAt,
+        expiresAt, remember,
       },
     });
 
@@ -91,45 +100,7 @@ export class AuthService {
       avatarUrl: customer.avatarUrl,
     };
 
-    return { customer: customerData, accessToken, refreshToken: rawRefreshToken };
-  }
-
-  static async refreshToken(rawToken: string) {
-    const tokenHash = TokenUtil.hashToken(rawToken);
-    const stored = await prisma.refreshToken.findUnique({
-      where: { tokenHash },
-      include: { customer: true },
-    });
-
-    if (!stored || stored.revoked || stored.expiresAt < new Date() || !stored.customer) {
-      throw ApiError.unauthorized('Invalid or expired refresh token');
-    }
-
-    // Revoke old token
-    await prisma.refreshToken.update({
-      where: { id: stored.id },
-      data: { revoked: true },
-    });
-
-    // Generate new pair
-    const accessToken = TokenUtil.generateAccessToken({
-      id: stored.customer.id,
-      email: stored.customer.email,
-      role: 'CUSTOMER',
-    });
-
-    const { token: newRawRefreshToken, hash: newTokenHash, expiresAt } = TokenUtil.generateRefreshToken();
-    await prisma.refreshToken.create({
-      data: {
-        tokenHash: newTokenHash,
-        userId: stored.customer.id,
-        userType: 'CUSTOMER',
-        customerId: stored.customer.id,
-        expiresAt,
-      },
-    });
-
-    return { accessToken, refreshToken: newRawRefreshToken };
+    return { customer: customerData, accessToken, refreshToken: rawRefreshToken, remember };
   }
 
   static async logout(rawToken?: string) {

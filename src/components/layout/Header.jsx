@@ -1,3 +1,4 @@
+import { useStoreSettings } from '../../context/StoreSettingsContext';
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Search, User, ShoppingBag, Menu, X, Heart } from 'lucide-react';
@@ -6,6 +7,7 @@ import { useScrollHeader } from '../../hooks/useScrollAnimation';
 import MobileNav from './MobileNav';
 
 export default function Header() {
+  const {settings}=useStoreSettings();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const { cartCount } = useCart();
@@ -25,9 +27,7 @@ export default function Header() {
   return (
     <>
       {/* Announcement Bar */}
-      <div className="bg-brand-charcoal text-white text-[10px] sm:text-xs text-center py-1.5 sm:py-2 px-3 tracking-wider sm:tracking-widest uppercase font-light truncate sm:overflow-visible">
-        Free nationwide delivery on orders over ₦150,000 &nbsp;|&nbsp; New Nigerian collections weekly
-      </div>
+      {settings?.website.announcementEnabled && <div className="bg-brand-charcoal text-white text-xs text-center py-2 px-3">{settings.website.announcementText}</div>}
 
       <header
         className={`sticky top-0 z-50 transition-all duration-500 ${
@@ -52,12 +52,12 @@ export default function Header() {
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2 sm:gap-2.5 flex-shrink-0 group">
               <img
-                src="/nobelle.png"
+                src={settings?.website.logoUrl || "/nobelle.png"}
                 alt="NOBELLE Logo"
                 className="w-7 h-7 sm:w-9 sm:h-9 object-contain rounded-full border border-brand-gold/40 shadow-sm transition-transform duration-300 group-hover:scale-105"
               />
               <span className="font-serif text-xl sm:text-2xl lg:text-3xl font-bold tracking-wider text-brand-charcoal">
-                NOBELLE
+                {settings?.general.storeName || 'NOBELLE'}
               </span>
             </Link>
 
@@ -85,6 +85,7 @@ export default function Header() {
               ))}
             </nav>
 
+            <Link to="/account" className="text-sm">Account</Link>
             {/* Right Icons */}
             <div className="flex items-center gap-3 sm:gap-4">
               <button
@@ -96,7 +97,7 @@ export default function Header() {
               </button>
 
               <Link
-                to="/shop"
+                to="/account"
                 className="hidden sm:block p-2 text-brand-charcoal hover:text-brand-red transition-colors"
                 aria-label="Wishlist"
               >
@@ -132,6 +133,7 @@ export default function Header() {
                 placeholder="Search for products..."
                 className="input-field pl-10 pr-10"
                 autoFocus={searchOpen}
+                onKeyDown={e => { if (e.key === 'Enter') window.location.assign(`/shop?search=${encodeURIComponent(e.target.value)}`); }}
               />
               <Search
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-gray-light"

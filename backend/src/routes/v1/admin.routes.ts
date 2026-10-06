@@ -16,7 +16,7 @@ const router = Router();
 
 // Public Admin Auth routes
 router.post('/auth/login', validate(loginSchema), AdminAuthController.login);
-router.post('/auth/refresh', validate(refreshTokenSchema), AdminAuthController.refreshToken);
+router.post('/auth/refresh', AdminAuthController.refreshToken);
 router.post('/auth/logout', AdminAuthController.logout);
 router.post('/auth/forgot-password', validate(forgotPasswordSchema), AdminAuthController.forgotPassword);
 router.post('/auth/reset-password', validate(resetPasswordSchema), AdminAuthController.resetPassword);
@@ -38,8 +38,8 @@ router.patch('/categories/:id', validate(updateCategorySchema), CategoryControll
 router.delete('/categories/:id', CategoryController.delete);
 
 // Admin Collections
-router.post('/collections', CollectionController.create);
-router.patch('/collections/:id', CollectionController.update);
+router.post('/collections', validate(createCategorySchema), CollectionController.create);
+router.patch('/collections/:id', validate(updateCategorySchema), CollectionController.update);
 router.delete('/collections/:id', CollectionController.delete);
 
 // Admin Orders

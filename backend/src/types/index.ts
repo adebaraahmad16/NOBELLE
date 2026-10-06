@@ -2,7 +2,8 @@ export interface AuthUser {
   id: string;
   email: string;
   role: 'CUSTOMER' | 'ADMIN';
-  adminRole?: 'SUPER_ADMIN' | 'MANAGER' | 'SUPPORT';
+  adminRole?: 'SUPER_ADMIN' | 'MANAGER' | 'SUPPORT' | 'ORDER_MANAGER' | 'INVENTORY_MANAGER' | 'MARKETING_MANAGER';
+  sid?: string;
 }
 
 export interface PaginatedResult<T> {

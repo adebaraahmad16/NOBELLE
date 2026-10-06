@@ -128,13 +128,13 @@ export default function AdminLayout() {
           100% { background-position:  900px 0; }
         }
         .skeleton {
-          background: linear-gradient(90deg, #EFE9E1 20%, #E6DDD3 50%, #EFE9E1 80%);
+          background: #f2eeee;
           background-size: 900px 100%;
           animation: nbShimmer 1.6s ease-in-out infinite;
           border-radius: 8px;
         }
         html.dark .skeleton {
-          background: linear-gradient(90deg, #2B272B 20%, #353034 50%, #2B272B 80%);
+          background: #f2eeee;
           background-size: 900px 100%;
         }
 
@@ -142,7 +142,7 @@ export default function AdminLayout() {
         .ripple-btn::after {
           content: '';
           position: absolute; inset: 0;
-          background: radial-gradient(circle, rgba(255,255,255,0.28) 1%, transparent 70%);
+          background: #f2eeee;
           opacity: 0; transform: scale(0);
           transition: transform 0.55s, opacity 0.45s;
         }

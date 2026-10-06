@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.test-build/
+.env
+uploads/
+frontend-integration/dist/
+frontend-integration/node_modules/
+frontend-backup-*/
+browser-profile/

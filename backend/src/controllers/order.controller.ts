@@ -1,11 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import { OrderService } from '../services/order.service';
+import { CheckoutService } from '../services/checkout.service';
 import { ApiResponse } from '../utils/apiResponse';
 
 export class OrderController {
   static async create(req: Request, res: Response, next: NextFunction) {
     try {
-      const order = await OrderService.createOrder(req.user!.id, req.body);
+      const order = await CheckoutService.create(req.user!.id, req.body);
       return ApiResponse.created(res, order, 'Order created successfully');
     } catch (error) {
       next(error);

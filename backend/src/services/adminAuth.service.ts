@@ -1,3 +1,5 @@
+import { clientDevice, safeAdminSelect, SettingsService } from './settings.service';
+import { serializable } from '../database/transaction';
 import crypto from 'crypto';
 import prisma from '../repositories/prisma';
 import { PasswordUtil } from '../utils/password';
@@ -9,17 +11,18 @@ import { ENV } from '../config/env';
 const RESET_TOKEN_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
 export class AdminAuthService {
-  static async login(email: string, password: string) {
+  static async login(email: string, password: string, remember = false, userAgent?: string) {
     const admin = await prisma.admin.findUnique({
       where: { email: email.toLowerCase() },
     });
 
-    if (!admin || !admin.isActive) {
+    if (!admin || !admin.isActive || admin.deletedAt) {
       throw ApiError.unauthorized('Invalid email or password');
     }
 
     const isMatch = await PasswordUtil.compare(password, admin.passwordHash);
     if (!isMatch) {
+      await prisma.activityLog.create({data:{adminId:admin.id,action:'LOGIN_FAILURE',entity:'Admin',entityId:admin.id,metadata:clientDevice(userAgent)}});
       throw ApiError.unauthorized('Invalid email or password');
     }
 
@@ -28,69 +31,21 @@ export class AdminAuthService {
       data: { lastLoginAt: new Date() },
     });
 
-    const accessToken = TokenUtil.generateAccessToken({
-      id: admin.id,
-      email: admin.email,
-      role: 'ADMIN',
-      adminRole: admin.role,
-    });
-
     const { token: rawRefreshToken, hash: tokenHash, expiresAt } = TokenUtil.generateRefreshToken();
-    await prisma.refreshToken.create({
-      data: {
-        tokenHash,
-        userId: admin.id,
-        userType: 'ADMIN',
-        adminId: admin.id,
-        expiresAt,
-      },
-    });
+    const session=await prisma.refreshToken.create({data:{tokenHash,userId:admin.id,userType:'ADMIN',adminId:admin.id,expiresAt,remember,userAgent:userAgent?.slice(0,512),loginAt:new Date(),lastActiveAt:new Date()}});
+    const accessToken=TokenUtil.generateAccessToken({id:admin.id,email:admin.email,role:'ADMIN',adminRole:admin.role,sid:session.id});
+    await prisma.activityLog.create({data:{adminId:admin.id,action:'LOGIN_SUCCESS',entity:'Admin',entityId:admin.id,metadata:clientDevice(userAgent)}});
 
     const adminData = {
       id: admin.id,
       email: admin.email,
       name: admin.name,
       role: admin.role,
+      permissions:await SettingsService.permissions(admin.role),
+      phone: admin.phone, avatarUrl: admin.avatarUrl,
     };
 
-    return { admin: adminData, accessToken, refreshToken: rawRefreshToken };
-  }
-
-  static async refreshToken(rawToken: string) {
-    const tokenHash = TokenUtil.hashToken(rawToken);
-    const stored = await prisma.refreshToken.findUnique({
-      where: { tokenHash },
-      include: { admin: true },
-    });
-
-    if (!stored || stored.revoked || stored.expiresAt < new Date() || !stored.admin) {
-      throw ApiError.unauthorized('Invalid or expired refresh token');
-    }
-
-    await prisma.refreshToken.update({
-      where: { id: stored.id },
-      data: { revoked: true },
-    });
-
-    const accessToken = TokenUtil.generateAccessToken({
-      id: stored.admin.id,
-      email: stored.admin.email,
-      role: 'ADMIN',
-      adminRole: stored.admin.role,
-    });
-
-    const { token: newRawRefreshToken, hash: newTokenHash, expiresAt } = TokenUtil.generateRefreshToken();
-    await prisma.refreshToken.create({
-      data: {
-        tokenHash: newTokenHash,
-        userId: stored.admin.id,
-        userType: 'ADMIN',
-        adminId: stored.admin.id,
-        expiresAt,
-      },
-    });
-
-    return { accessToken, refreshToken: newRawRefreshToken };
+    return { admin: adminData, accessToken, refreshToken: rawRefreshToken, remember };
   }
 
   static async logout(rawToken?: string) {
@@ -109,7 +64,7 @@ export class AdminAuthService {
     });
 
     // Always return success — never reveal whether the account exists.
-    if (!admin || !admin.isActive) {
+    if (!admin || !admin.isActive || admin.deletedAt) {
       return { sent: true };
     }
 
@@ -133,70 +88,31 @@ export class AdminAuthService {
 
     const resetUrl = `${ENV.ADMIN_URL}/admin/reset-password?token=${rawToken}`;
 
-    await EmailService.sendEmail(
-      admin.email,
-      'NOBELLE Admin — Password Reset',
-      `
-        <div style="font-family: Georgia, serif; max-width: 520px; margin: 0 auto; padding: 24px;">
-          <h2 style="color: #641F2D;">NOBELLE Admin</h2>
-          <p style="color: #242124;">Hello ${admin.name},</p>
-          <p style="color: #242124;">We received a request to reset your NOBELLE admin password. This link expires in 30 minutes.</p>
-          <p style="margin: 24px 0;">
-            <a href="${resetUrl}" style="background: #641F2D; color: #FCFAF7; padding: 12px 24px; border-radius: 12px; text-decoration: none; font-weight: bold;">Reset Password</a>
-          </p>
-          <p style="color: #777277; font-size: 12px;">If you didn't request this, you can safely ignore this email.</p>
-        </div>
-      `,
-    );
+    await prisma.emailJob.create({ data: { key: `admin-reset:${tokenHash}`, recipient: admin.email,
+      subject: 'NOBELLE admin password reset', html: `<p><a href="${resetUrl}">Reset password</a>. This link expires in 30 minutes.</p>` } });
 
     return { sent: true };
   }
 
   static async resetPassword(rawToken: string, newPassword: string) {
     const tokenHash = TokenUtil.hashToken(rawToken);
-    const record = await prisma.passwordResetToken.findUnique({
-      where: { tokenHash },
-      include: { admin: true },
-    });
-
-    if (!record || record.usedAt || record.revoked || record.expiresAt < new Date() || record.userType !== 'ADMIN' || !record.admin) {
-      throw ApiError.badRequest('Invalid or expired reset link. Please request a new one.');
-    }
-
     const passwordHash = await PasswordUtil.hash(newPassword);
-
-    await prisma.$transaction([
-      prisma.admin.update({
-        where: { id: record.adminId! },
-        data: { passwordHash },
-      }),
-      prisma.passwordResetToken.update({
-        where: { id: record.id },
-        data: { usedAt: new Date() },
-      }),
-      // Revoke all existing sessions for this admin
-      prisma.refreshToken.updateMany({
-        where: { adminId: record.adminId, revoked: false },
-        data: { revoked: true },
-      }),
-    ]);
-
-    return { reset: true };
+    return serializable(async tx => {
+      const record = await tx.passwordResetToken.findUnique({ where: { tokenHash }, include: { admin: true } });
+      if (!record?.adminId || record.usedAt || record.revoked || record.expiresAt <= new Date() || record.userType !== 'ADMIN' || !record.admin?.isActive) throw ApiError.badRequest('Invalid or expired reset link');
+      await tx.admin.update({ where: { id: record.adminId }, data: { passwordHash } });
+      await tx.passwordResetToken.update({ where: { id: record.id }, data: { usedAt: new Date() } });
+      await tx.refreshToken.updateMany({ where: { adminId: record.adminId }, data: { revoked: true } });
+      return { reset: true };
+    });
   }
 
   static async getMe(adminId: string) {
     const admin = await prisma.admin.findUnique({
       where: { id: adminId },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        lastLoginAt: true,
-        createdAt: true,
-      },
+      select: safeAdminSelect,
     });
     if (!admin) throw ApiError.notFound('Admin not found');
-    return admin;
+    return {...admin,permissions:await SettingsService.permissions(admin.role)};
   }
 }

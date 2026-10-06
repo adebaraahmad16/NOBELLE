@@ -7,14 +7,16 @@ export function AdminAuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(() => adminAuthApi.hasSession());
   const [admin, setAdmin] = useState(() => getAdminUser());
 
+  const [loading, setLoading] = useState(true);
+
   // Re-verify session against the backend on mount if a token exists
   useEffect(() => {
-    if (!adminAuthApi.hasSession()) return;
+
     let cancelled = false;
     adminAuthApi
       .getMe()
       .then((me) => {
-        if (!cancelled) setAdmin(me);
+        if (!cancelled) { setAdmin(me); setIsAuthenticated(true); }
       })
       .catch(() => {
         if (!cancelled) {
@@ -22,32 +24,34 @@ export function AdminAuthProvider({ children }) {
           setIsAuthenticated(false);
           setAdmin(null);
         }
-      });
+      }).finally(() => { if (!cancelled) setLoading(false); });
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  useEffect(() => {
+    const expired = e => { if (e.detail === 'admin') { clearSession(); setIsAuthenticated(false); setAdmin(null); } };
+    window.addEventListener('nobelle-session-expired', expired);
+    return () => window.removeEventListener('nobelle-session-expired', expired);
   }, []);
 
   const login = async (email, password, remember = false) => {
     const data = await adminAuthApi.login(email, password, remember);
     setIsAuthenticated(true);
     setAdmin(data.admin);
-    return true;
+    return data.admin;
   };
 
   const logout = async () => {
-    try {
-      await adminAuthApi.logout();
-    } catch {
-      // session cleared locally regardless
-    }
+    await adminAuthApi.logout();
     clearSession();
     setIsAuthenticated(false);
     setAdmin(null);
   };
 
   return (
-    <AdminAuthContext.Provider value={{ isAuthenticated, admin, login, logout }}>
+    <AdminAuthContext.Provider value={{ isAuthenticated, admin, login, logout, loading, refreshAdmin: async () => { const me = await adminAuthApi.getMe(); setAdmin(me); return me; } }}>
       {children}
     </AdminAuthContext.Provider>
   );

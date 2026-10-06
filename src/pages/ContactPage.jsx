@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { api } from '../api/client';
+import { useState, useEffect } from 'react';
 import { Mail, Phone, MapPin, Clock, Send, Camera, MessageCircle, Hash } from 'lucide-react';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
@@ -12,6 +13,8 @@ function AnimatedSection({ children, className = '' }) {
 }
 
 export default function ContactPage() {
+  const [contact,setContact] = useState({});
+  useEffect(() => { api('/content/contact').then(value => setContact(value || {})).catch(() => {}); }, []);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -24,11 +27,12 @@ export default function ContactPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setSubmitted(true);
-    setFormData({ name: '', email: '', subject: '', message: '' });
-    setTimeout(() => setSubmitted(false), 4000);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const handleSubmit = async (e) => {
+    e.preventDefault(); setBusy(true); setError('');
+    try { await api('/contact', { method: 'POST', body: formData }); setSubmitted(true); setFormData({ name: '', email: '', subject: '', message: '' }); }
+    catch (error) { setError(error.message); } finally { setBusy(false); }
   };
 
   return (
@@ -64,8 +68,8 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <p className="text-xs tracking-wider uppercase text-brand-gray mb-1">Email</p>
-                      <p className="text-sm text-brand-charcoal">hello@nobelle.com</p>
-                      <p className="text-sm text-brand-charcoal">support@nobelle.com</p>
+                      <p className="text-sm text-brand-charcoal">{contact.email || 'Contact details will be published here.'}</p>
+                      <p className="text-sm text-brand-charcoal"></p>
                     </div>
                   </div>
 
@@ -75,8 +79,8 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <p className="text-xs tracking-wider uppercase text-brand-gray mb-1">Phone</p>
-                      <p className="text-sm text-brand-charcoal">+1 (555) 123-4567</p>
-                      <p className="text-sm text-brand-charcoal">+1 (555) 987-6543</p>
+                      <p className="text-sm text-brand-charcoal">{contact.phone || ''}</p>
+                      <p className="text-sm text-brand-charcoal"></p>
                     </div>
                   </div>
 
@@ -87,9 +91,7 @@ export default function ContactPage() {
                     <div>
                       <p className="text-xs tracking-wider uppercase text-brand-gray mb-1">Address</p>
                       <p className="text-sm text-brand-charcoal">
-                        123 Fashion Avenue<br />
-                        Suite 500<br />
-                        New York, NY 10001
+                        {contact.address || ''}
                       </p>
                     </div>
                   </div>
@@ -102,7 +104,7 @@ export default function ContactPage() {
                       <p className="text-xs tracking-wider uppercase text-brand-gray mb-1">Business Hours</p>
                       <p className="text-sm text-brand-charcoal">Mon — Fri: 9:00 AM — 6:00 PM</p>
                       <p className="text-sm text-brand-charcoal">Sat: 10:00 AM — 4:00 PM</p>
-                      <p className="text-sm text-brand-gray">Sun: Closed</p>
+                      <p className="text-sm text-brand-gray"></p>
                     </div>
                   </div>
                 </div>
@@ -110,15 +112,9 @@ export default function ContactPage() {
                 <div className="mt-8 pt-8 border-t border-brand-beige">
                   <p className="text-xs tracking-wider uppercase text-brand-gray mb-4">Follow Us</p>
                   <div className="flex gap-3">
-                    <a href="#" className="w-10 h-10 border border-brand-beige-dark flex items-center justify-center text-brand-gray hover:bg-brand-red hover:border-brand-red hover:text-white transition-all duration-300">
-                      <Camera size={18} />
-                    </a>
-                    <a href="#" className="w-10 h-10 border border-brand-beige-dark flex items-center justify-center text-brand-gray hover:bg-brand-red hover:border-brand-red hover:text-white transition-all duration-300">
-                      <MessageCircle size={18} />
-                    </a>
-                    <a href="#" className="w-10 h-10 border border-brand-beige-dark flex items-center justify-center text-brand-gray hover:bg-brand-red hover:border-brand-red hover:text-white transition-all duration-300">
-                      <Hash size={18} />
-                    </a>
+                    
+                    
+                    
                   </div>
                 </div>
               </AnimatedSection>
@@ -137,7 +133,7 @@ export default function ContactPage() {
                     </div>
                   )}
 
-                  <form onSubmit={handleSubmit} className="space-y-5">
+                  <form onSubmit={handleSubmit} className="space-y-5">{error && <p role="alert">{error}</p>}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                       <div>
                         <label className="block text-xs tracking-wider uppercase text-brand-gray mb-2">
@@ -195,7 +191,7 @@ export default function ContactPage() {
                         required
                       />
                     </div>
-                    <button type="submit" className="btn-primary w-full sm:w-auto">
+                    <button type="submit" disabled={busy} className="btn-primary w-full sm:w-auto">
                       <Send size={16} className="mr-2" />
                       Send Message
                     </button>

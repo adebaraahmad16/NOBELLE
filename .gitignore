@@ -30,3 +30,6 @@ build*.txt
 !.env.example
 !backend/.env.example
 
+
+# Local admin preview artifacts
+.tmp/

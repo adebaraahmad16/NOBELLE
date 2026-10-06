@@ -1,6 +1,7 @@
+let displayCurrency='NGN';
+export function setDisplayCurrency(currency){displayCurrency=currency;}
 // NOBELLE Currency Utility
-// The store trades in Nigerian Naira (₦). All amounts stored in the
-// application data layer are plain numbers in Naira.
+// The store trades in Nigerian Naira (₦). The API stores exact NGN decimals; this utility formats values for display.
 
 export const CURRENCY_SYMBOL = '₦';
 
@@ -17,7 +18,7 @@ export function formatNaira(amount, options = {}) {
 
   return new Intl.NumberFormat('en-NG', {
     style: 'currency',
-    currency: 'NGN',
+    currency: displayCurrency,
     minimumFractionDigits: min,
     maximumFractionDigits: min,
     notation: compact ? 'compact' : 'standard',
@@ -40,11 +41,3 @@ export function formatAmount(amount) {
   return new Intl.NumberFormat('en-NG', { maximumFractionDigits: 2 }).format(amount);
 }
 
-/**
- * Generate a transaction-style reference, e.g. "NBL-7F3K9Q2X".
- * Used when a real payment gateway reference is not available.
- */
-export function generateReference(prefix = 'NBL') {
-  const rand = Math.random().toString(36).slice(2, 8).toUpperCase();
-  return `${prefix}-${rand}`;
-}

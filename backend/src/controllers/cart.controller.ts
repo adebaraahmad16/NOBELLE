@@ -6,7 +6,7 @@ import { ApiResponse } from '../utils/apiResponse';
 export class CartController {
   static async getCart(req: Request, res: Response, next: NextFunction) {
     try {
-      const cart = await CartService.getOrCreateCart(req.user!.id);
+      const cart = await CartService.getOrCreateCart(req.cartOwner!);
       return ApiResponse.success(res, cart);
     } catch (error) {
       next(error);
@@ -16,7 +16,7 @@ export class CartController {
   static async addItem(req: Request, res: Response, next: NextFunction) {
     try {
       const { variantId, quantity } = req.body;
-      const cart = await CartService.addItem(req.user!.id, variantId, quantity);
+      const cart = await CartService.addItem(req.cartOwner!, variantId, quantity);
       return ApiResponse.success(res, cart, 'Item added to cart');
     } catch (error) {
       next(error);
@@ -26,7 +26,7 @@ export class CartController {
   static async updateItem(req: Request, res: Response, next: NextFunction) {
     try {
       const { quantity } = req.body;
-      const cart = await CartService.updateItemQuantity(req.user!.id, req.params.id, quantity);
+      const cart = await CartService.updateItemQuantity(req.cartOwner!, req.params.id, quantity);
       return ApiResponse.success(res, cart, 'Cart updated');
     } catch (error) {
       next(error);
@@ -35,7 +35,7 @@ export class CartController {
 
   static async removeItem(req: Request, res: Response, next: NextFunction) {
     try {
-      const cart = await CartService.removeItem(req.user!.id, req.params.id);
+      const cart = await CartService.removeItem(req.cartOwner!, req.params.id);
       return ApiResponse.success(res, cart, 'Item removed');
     } catch (error) {
       next(error);
@@ -44,7 +44,7 @@ export class CartController {
 
   static async clearCart(req: Request, res: Response, next: NextFunction) {
     try {
-      const cart = await CartService.clearCart(req.user!.id);
+      const cart = await CartService.clearCart(req.cartOwner!);
       return ApiResponse.success(res, cart, 'Cart cleared');
     } catch (error) {
       next(error);
@@ -54,7 +54,7 @@ export class CartController {
   static async applyCoupon(req: Request, res: Response, next: NextFunction) {
     try {
       const { code } = req.body;
-      const cart = await CartService.getOrCreateCart(req.user!.id);
+      const cart = await CartService.getOrCreateCart(req.cartOwner!);
       const result = await CouponService.validateCoupon(code, cart.subtotal);
       return ApiResponse.success(res, result, 'Coupon applied successfully');
     } catch (error) {

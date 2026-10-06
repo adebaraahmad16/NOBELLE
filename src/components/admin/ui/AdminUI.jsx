@@ -65,7 +65,7 @@ export function PrimaryButton({ children, onClick, type = 'button', disabled = f
       onClick={onClick}
       disabled={disabled}
       className={`ripple-btn inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white transition-all hover:opacity-90 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100 ${className}`}
-      style={{ background: 'linear-gradient(135deg, #A94A5A, #8E3D4C)', ...rest.style }}
+      style={{ background: '#97364f', ...rest.style }}
     >
       {children}
     </button>

@@ -1,325 +1,76 @@
-import { useState } from 'react';
-import {
-  Store, CreditCard, Truck, Package, ShoppingBag, ShieldCheck, Save,
-  Plus, Trash2,
-} from 'lucide-react';
-import {
-  Card, PageHeader, PrimaryButton, GhostButton, Field, inputStyle, inputClass,
-  useToast,
-} from '../../components/admin/ui/AdminUI';
-import { useAdminData } from '../../context/AdminDataContext';
-import { formatNaira } from '../../utils/currency';
+import { formatDate } from '../../utils/date';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useBeforeUnload, useBlocker, useSearchParams } from 'react-router-dom';
+import { Settings, Store, User, CreditCard, Truck, ShoppingBag, Package, Bell, Globe, FileText, Shield, Users, X, Eye, EyeOff, Upload, ArrowUp, ArrowDown } from 'lucide-react';
+import DOMPurify from 'dompurify';
+import { api } from '../../api/client';
+import { useAdminAuth } from '../../context/AdminAuthContext';
+import './settings.css';
 
-const TABS = [
-  { key: 'store', label: 'Store', icon: Store },
-  { key: 'payments', label: 'Payments', icon: CreditCard },
-  { key: 'delivery', label: 'Delivery', icon: Truck },
-  { key: 'inventory', label: 'Inventory', icon: Package },
-  { key: 'orders', label: 'Orders', icon: ShoppingBag },
-  { key: 'security', label: 'Security', icon: ShieldCheck },
-];
+const sections=[['general','General',Settings],['store','Store Information',Store],['account','Account & Profile',User],['payments','Payments',CreditCard],['shipping','Shipping & Delivery',Truck],['orders','Orders',ShoppingBag],['products','Products',Package],['notifications','Notifications',Bell],['website','Website',Globe],['policies','Policies',FileText],['security','Security',Shield],['permissions','Admin & Permissions',Users]];
+const labels={general:'Save General Settings',store:'Save Store Information',account:'Update Profile',payments:'Save Payment Settings',shipping:'Save Shipping Settings',orders:'Save Order Settings',products:'Save Product Settings',notifications:'Save Notification Preferences',website:'Save Website Settings',permissions:'Save Permissions'};
+const events={newOrder:'New Order',successfulPayment:'Successful Payment',failedPayment:'Failed Payment',cancelledOrder:'Cancelled Order',returnRequest:'Return Request',refundRequest:'Refund Request',lowStock:'Low Stock',outOfStock:'Out of Stock',newCustomer:'New Customer',newProductReview:'New Product Review'};
+const copy=v=>v?structuredClone(v):v;
+const equal=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+const title=v=>v.toLowerCase().replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase());
+const date=formatDate;
+const request=(path,options={})=>api(`/admin/settings${path}`,{role:'admin',...options});
+function Field({label,value,onChange,type='text',options,help,required=false,disabled=false,min,max,step}) {
+ return <label className="ns-field"><span>{label}</span>{options?<select value={value??''} disabled={disabled} onChange={e=>onChange(e.target.value)}>{options.map(o=><option key={Array.isArray(o)?o[0]:o} value={Array.isArray(o)?o[0]:o}>{Array.isArray(o)?o[1]:o}</option>)}</select>:type==='textarea'?<textarea value={value??''} onChange={e=>onChange(e.target.value)} required={required} rows={4}/>:<input type={type} value={value??''} onChange={e=>onChange(type==='number'?(e.target.value===''?'':Number(e.target.value)):e.target.value)} required={required} disabled={disabled} min={min} max={max} step={step}/>} {help&&<small>{help}</small>}</label>;
+}
+function Toggle({label,help,checked,onChange,disabled=false}) {return <label className="ns-toggle"><span><strong>{label}</strong>{help&&<small>{help}</small>}</span><input type="checkbox" role="switch" checked={Boolean(checked)} onChange={e=>onChange(e.target.checked)} disabled={disabled}/></label>;}
+function Card({title,description,children}) {return <section className="ns-card"><div className="ns-card-heading"><h2>{title}</h2>{description&&<p>{description}</p>}</div>{children}</section>;}
+function Modal({title,children,onClose}) {const ref=useRef(null);useEffect(()=>{const dialog=ref.current;dialog.showModal();return()=>dialog.close();},[]);return <dialog ref={ref} className="ns-dialog" onCancel={e=>{e.preventDefault();onClose();}}><div className="ns-modal-header"><h2>{title}</h2><button type="button" aria-label="Close dialog" onClick={onClose}><X size={20}/></button></div>{children}</dialog>;}
+function PasswordField({label,value,onChange}) {const [show,setShow]=useState(false);return <div className="ns-password"><Field label={label} type={show?'text':'password'} value={value} onChange={onChange} required/><button type="button" aria-label={`${show?'Hide':'Show'} ${label.toLowerCase()}`} onClick={()=>setShow(!show)}>{show?<EyeOff size={18}/>:<Eye size={18}/>}</button></div>;}
+function PasswordForm({run,busy,onDirty}) {const [form,setForm]=useState({currentPassword:'',newPassword:'',confirmPassword:''});return <form onSubmit={e=>{e.preventDefault();run(async()=>{if(form.newPassword!==form.confirmPassword)throw Error('The new passwords must match.');if(form.newPassword.length<12)throw Error('Use at least 12 characters.');await request('/account/password',{method:'POST',body:form});setForm({currentPassword:'',newPassword:'',confirmPassword:''});onDirty(false);});}}><div className="ns-grid">{Object.entries({currentPassword:'Current password',newPassword:'New password',confirmPassword:'Confirm new password'}).map(([key,label])=><PasswordField key={key} label={label} value={form[key]} onChange={v=>{const next={...form,[key]:v};setForm(next);onDirty(Object.values(next).some(Boolean));}}/>)}</div><p className="ns-help">Use at least 12 characters. Changing your password signs out other devices.</p><button className="ns-primary" disabled={busy}>Change Password</button></form>;}
+function ImageField({label,kind,value,onChange,run,busy}) {const input=useRef(null);return <div className="ns-upload"><span>{label}</span><div>{value?<img src={value} alt={`${label} preview`}/>:<div className="ns-image-empty"><Upload size={24}/></div>}<div><input ref={input} type="file" accept={kind==='favicon'?'.ico,image/png,image/jpeg,image/webp':'image/png,image/jpeg,image/webp'} hidden onChange={e=>{const file=e.target.files?.[0];e.target.value='';if(file)run(async()=>{const body=new FormData();body.append('image',file);const result=await request(`/assets/${kind}`,{method:'POST',body});onChange(result.url);},false);}}/><button type="button" disabled={busy} onClick={()=>input.current.click()}>Upload {label.toLowerCase()}</button><small>PNG, JPEG or WebP. {kind==='favicon'?'ICO supported. Maximum 512 KB.':'Maximum 5 MB.'}</small>{value&&<button type="button" disabled={busy} onClick={()=>onChange('')}>Remove image</button>}</div></div></div>;}
+function RichEditor({value,onChange}) {const ref=useRef(null);useEffect(()=>{if(ref.current.innerHTML!==value)ref.current.innerHTML=DOMPurify.sanitize(value);},[value]);const command=(name,arg)=>{ref.current.focus();document.execCommand(name,false,arg);onChange(ref.current.innerHTML);};return <div className="ns-editor"><div className="ns-editor-tools">{[['bold','Bold'],['italic','Italic'],['underline','Underline'],['insertUnorderedList','Bullet list'],['insertOrderedList','Numbered list']].map(([cmd,label])=><button type="button" key={cmd} onMouseDown={e=>e.preventDefault()} onClick={()=>command(cmd)}>{label}</button>)}<select aria-label="Paragraph style" defaultValue="p" onChange={e=>command('formatBlock',e.target.value)}><option value="p">Paragraph</option><option value="h2">Heading</option><option value="h3">Subheading</option></select></div><div ref={ref} contentEditable suppressContentEditableWarning role="textbox" aria-label="Policy content" aria-multiline="true" onInput={()=>onChange(ref.current.innerHTML)} onPaste={e=>{e.preventDefault();document.execCommand('insertText',false,e.clipboardData.getData('text/plain'));onChange(ref.current.innerHTML);}}/></div>;}
 
 export default function AdminSettingsPage() {
-  const { settings, updateStoreSettings } = useAdminData();
-  const { pushToast, ToastViewport } = useToast();
-
-  const [tab, setTab] = useState('store');
-  const [form, setForm] = useState(settings);
-  const [pwForm, setPwForm] = useState({ current: '', next: '', confirm: '' });
-
-  // Re-sync the editable draft whenever the persisted settings change
-  // (e.g. after a save, or when the Delivery page edits zones).
-  const [lastSettings, setLastSettings] = useState(settings);
-  if (settings !== lastSettings) {
-    setLastSettings(settings);
-    setForm(settings);
-  }
-
-  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
-
-  const save = (sectionLabel) => {
-    updateStoreSettings(form);
-    pushToast(`${sectionLabel} settings saved.`);
-  };
-
-  const changePassword = (e) => {
-    e.preventDefault();
-    if (!pwForm.current || !pwForm.next) {
-      pushToast('Fill in both password fields.', 'error');
-      return;
-    }
-    if (pwForm.next.length < 8) {
-      pushToast('New password must be at least 8 characters.', 'error');
-      return;
-    }
-    if (pwForm.next !== pwForm.confirm) {
-      pushToast('New passwords do not match.', 'error');
-      return;
-    }
-    // Password change requires a real backend — acknowledged but not simulated.
-    pushToast('Password update requires a connected backend. Settings kept until then.', 'info');
-    setPwForm({ current: '', next: '', confirm: '' });
-  };
-
-  const zones = form.deliveryZones || [];
-
-  return (
-    <div className="space-y-5">
-      {ToastViewport}
-      <PageHeader title="Settings" subtitle="Configure how your store operates" breadcrumb={['System']} />
-
-      {/* Tabs */}
-      <Card padded={false}>
-        <div className="p-3 flex flex-wrap gap-2">
-          {TABS.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className={`px-3.5 py-2 rounded-xl text-[11px] font-bold flex items-center gap-1.5 transition-all ${tab === t.key ? 'text-white' : ''}`}
-              style={tab === t.key
-                ? { background: '#A94A5A' }
-                : { border: '1px solid var(--admin-border-soft)', color: 'var(--admin-text-muted)' }}
-              aria-pressed={tab === t.key}
-            >
-              <t.icon size={12} /> {t.label}
-            </button>
-          ))}
-        </div>
-      </Card>
-
-      {/* ── Store ── */}
-      {tab === 'store' && (
-        <Card>
-          <h2 className="font-serif text-sm font-bold mb-4" style={{ color: 'var(--admin-text)' }}>Store Details</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Store Name" htmlFor="s-name">
-              <input id="s-name" type="text" value={form.storeName || ''} onChange={(e) => set('storeName', e.target.value)} className={inputClass} style={inputStyle} />
-            </Field>
-            <Field label="Currency">
-              <input type="text" value="₦ — Nigerian Naira (NGN)" disabled className={`${inputClass} opacity-60`} style={inputStyle} />
-            </Field>
-            <Field label="Contact Email" htmlFor="s-email">
-              <input id="s-email" type="email" value={form.contactEmail || ''} onChange={(e) => set('contactEmail', e.target.value)} placeholder="customers@yourstore.com" className={inputClass} style={inputStyle} />
-            </Field>
-            <Field label="Contact Phone" htmlFor="s-phone">
-              <input id="s-phone" type="tel" value={form.contactPhone || ''} onChange={(e) => set('contactPhone', e.target.value)} placeholder="+234 ..." className={inputClass} style={inputStyle} />
-            </Field>
-            <div className="sm:col-span-2">
-              <Field label="Business Address" htmlFor="s-addr">
-                <input id="s-addr" type="text" value={form.address || ''} onChange={(e) => set('address', e.target.value)} className={inputClass} style={inputStyle} />
-              </Field>
-            </div>
-          </div>
-          <div className="mt-5">
-            <PrimaryButton onClick={() => save('Store')}><Save size={13} /> Save Store Settings</PrimaryButton>
-          </div>
-        </Card>
-      )}
-
-      {/* ── Payments ── */}
-      {tab === 'payments' && (
-        <Card>
-          <h2 className="font-serif text-sm font-bold mb-1" style={{ color: 'var(--admin-text)' }}>Payment Provider</h2>
-          <p className="text-xs mb-4" style={{ color: 'var(--admin-text-muted)' }}>
-            Configure the gateway customers pay through. Keys are stored for your connected backend.
-          </p>
-          <div className="space-y-4">
-            <Field label="Provider" htmlFor="s-provider">
-              <select
-                id="s-provider"
-                value={form.paymentProvider || ''}
-                onChange={(e) => set('paymentProvider', e.target.value)}
-                className={inputClass}
-                style={inputStyle}
-              >
-                <option value="">Select a provider...</option>
-                <option value="paystack">Paystack</option>
-                <option value="flutterwave">Flutterwave</option>
-                <option value="remita">Remita</option>
-                <option value="stripe">Stripe (international)</option>
-              </select>
-            </Field>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Field label="Public Key" htmlFor="s-pub">
-                <input
-                  id="s-pub"
-                  type="text"
-                  value={form.paymentConfig?.publicKey || ''}
-                  onChange={(e) => set('paymentConfig', { ...form.paymentConfig, publicKey: e.target.value })}
-                  placeholder="pk_..."
-                  className={`${inputClass} font-mono`}
-                  style={inputStyle}
-                />
-              </Field>
-              <Field label="Secret Key" htmlFor="s-sec" hint="Stored locally until a backend is connected — never exposed to customers.">
-                <input
-                  id="s-sec"
-                  type="password"
-                  value={form.paymentConfig?.secretKey || ''}
-                  onChange={(e) => set('paymentConfig', { ...form.paymentConfig, secretKey: e.target.value })}
-                  placeholder="sk_..."
-                  className={`${inputClass} font-mono`}
-                  style={inputStyle}
-                />
-              </Field>
-            </div>
-          </div>
-          <div className="mt-5">
-            <PrimaryButton onClick={() => save('Payment')}><Save size={13} /> Save Payment Settings</PrimaryButton>
-          </div>
-        </Card>
-      )}
-
-      {/* ── Delivery ── */}
-      {tab === 'delivery' && (
-        <Card>
-          <h2 className="font-serif text-sm font-bold mb-1" style={{ color: 'var(--admin-text)' }}>Delivery Settings</h2>
-          <p className="text-xs mb-4" style={{ color: 'var(--admin-text-muted)' }}>
-            Manage zones and fees. You can also do this from the Delivery page.
-          </p>
-          <div className="space-y-2 mb-4">
-            {zones.length === 0 ? (
-              <p className="text-xs p-3.5 rounded-xl" style={{ background: 'var(--admin-surface-2)', color: 'var(--admin-text-muted)' }}>
-                No delivery zones configured yet.
-              </p>
-            ) : (
-              zones.map((z, i) => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between gap-3 p-3 rounded-xl"
-                  style={{ background: 'var(--admin-surface-2)' }}
-                >
-                  <div>
-                    <p className="text-xs font-bold" style={{ color: 'var(--admin-text)' }}>{z.name}</p>
-                    <p className="text-[10px]" style={{ color: 'var(--admin-text-muted)' }}>
-                      {formatNaira(z.fee)}{z.eta ? ` · ${z.eta}` : ''}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => set('deliveryZones', zones.filter((_, x) => x !== i))}
-                    className="p-1.5 rounded-lg"
-                    style={{ color: '#A94A5A' }}
-                    title="Remove zone"
-                    aria-label={`Remove ${z.name}`}
-                  >
-                    <Trash2 size={12} />
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-          <button
-            onClick={() => set('deliveryZones', [...zones, { name: 'New Zone', fee: 0, eta: '' }])}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold"
-            style={{ border: '1px solid var(--admin-border)', color: 'var(--admin-text)' }}
-          >
-            <Plus size={13} /> Add Zone
-          </button>
-          <div className="mt-5">
-            <PrimaryButton onClick={() => save('Delivery')}><Save size={13} /> Save Delivery Settings</PrimaryButton>
-          </div>
-        </Card>
-      )}
-
-      {/* ── Inventory ── */}
-      {tab === 'inventory' && (
-        <Card>
-          <h2 className="font-serif text-sm font-bold mb-4" style={{ color: 'var(--admin-text)' }}>Inventory Settings</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Default Low-Stock Threshold" htmlFor="s-threshold" hint="Products inherit this unless they set their own.">
-              <input
-                id="s-threshold"
-                type="number"
-                min="0"
-                value={form.lowStockThreshold ?? 5}
-                onChange={(e) => set('lowStockThreshold', Number(e.target.value))}
-                className={inputClass}
-                style={inputStyle}
-              />
-            </Field>
-            <div className="flex items-end pb-2.5">
-              <label className="flex items-center gap-2.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={form.trackStock !== false}
-                  onChange={(e) => set('trackStock', e.target.checked)}
-                  className="w-4 h-4 accent-[#A94A5A]"
-                />
-                <span className="text-xs font-semibold" style={{ color: 'var(--admin-text)' }}>Enable stock tracking storewide</span>
-              </label>
-            </div>
-          </div>
-          <div className="mt-5">
-            <PrimaryButton onClick={() => save('Inventory')}><Save size={13} /> Save Inventory Settings</PrimaryButton>
-          </div>
-        </Card>
-      )}
-
-      {/* ── Orders ── */}
-      {tab === 'orders' && (
-        <Card>
-          <h2 className="font-serif text-sm font-bold mb-4" style={{ color: 'var(--admin-text)' }}>Order Settings</h2>
-          <div className="space-y-4">
-            <label className="flex items-center gap-2.5 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.allowCancellations !== false}
-                onChange={(e) => set('allowCancellations', e.target.checked)}
-                className="w-4 h-4 accent-[#A94A5A]"
-              />
-              <span className="text-xs font-semibold" style={{ color: 'var(--admin-text)' }}>Allow customers to cancel orders</span>
-            </label>
-            <Field label="Cancellation Window (hours)" htmlFor="s-cancel">
-              <input
-                id="s-cancel"
-                type="number"
-                min="0"
-                value={form.cancellationWindowHours ?? 24}
-                onChange={(e) => set('cancellationWindowHours', Number(e.target.value))}
-                className={inputClass}
-                style={inputStyle}
-              />
-            </Field>
-            <Field label="Returns Window (days)" htmlFor="s-returns" hint="How long after delivery customers may request a return.">
-              <input
-                id="s-returns"
-                type="number"
-                min="0"
-                value={form.returnsWindowDays ?? 14}
-                onChange={(e) => set('returnsWindowDays', Number(e.target.value))}
-                className={inputClass}
-                style={inputStyle}
-              />
-            </Field>
-          </div>
-          <div className="mt-5">
-            <PrimaryButton onClick={() => save('Order')}><Save size={13} /> Save Order Settings</PrimaryButton>
-          </div>
-        </Card>
-      )}
-
-      {/* ── Security ── */}
-      {tab === 'security' && (
-        <Card>
-          <h2 className="font-serif text-sm font-bold mb-1" style={{ color: 'var(--admin-text)' }}>Security</h2>
-          <p className="text-xs mb-4" style={{ color: 'var(--admin-text-muted)' }}>
-            Admin authentication is currently local to this browser. Connect a backend for production-grade session security.
-          </p>
-          <form onSubmit={changePassword} className="space-y-4 max-w-sm">
-            <Field label="Current Password" htmlFor="s-pw0">
-              <input id="s-pw0" type="password" value={pwForm.current} onChange={(e) => setPwForm((p) => ({ ...p, current: e.target.value }))} className={inputClass} style={inputStyle} />
-            </Field>
-            <Field label="New Password" htmlFor="s-pw1" hint="Minimum 8 characters.">
-              <input id="s-pw1" type="password" value={pwForm.next} onChange={(e) => setPwForm((p) => ({ ...p, next: e.target.value }))} className={inputClass} style={inputStyle} />
-            </Field>
-            <Field label="Confirm New Password" htmlFor="s-pw2">
-              <input id="s-pw2" type="password" value={pwForm.confirm} onChange={(e) => setPwForm((p) => ({ ...p, confirm: e.target.value }))} className={inputClass} style={inputStyle} />
-            </Field>
-            <PrimaryButton type="submit">Update Password</PrimaryButton>
-          </form>
-        </Card>
-      )}
-
-    </div>
-  );
+ const [params,setParams]=useSearchParams();const {refreshAdmin}=useAdminAuth();
+ const [data,setData]=useState(null),[draft,setDraft]=useState(null),[base,setBase]=useState(null),[busy,setBusy]=useState(false),[error,setError]=useState(''),[toast,setToast]=useState(''),[confirm,setConfirm]=useState(null),[modal,setModal]=useState(null),[zones,setZones]=useState([]),[policies,setPolicies]=useState([]),[security,setSecurity]=useState(null),[staff,setStaff]=useState([]),[auxLoading,setAuxLoading]=useState(false),[policyId,setPolicyId]=useState('privacy'),[policy,setPolicy]=useState(null),[policyBase,setPolicyBase]=useState(null),[size,setSize]=useState(''),[role,setRole]=useState('MANAGER'),[passwordDirty,setPasswordDirty]=useState(false);
+ const section=sections.some(([key])=>key===params.get('tab'))?params.get('tab'):'general';
+ const permissions=data?.meta.permissions || [];const allowed=key=>['account','security'].includes(key)||permissions.includes(key==='permissions'?'MANAGE_STAFF':'MANAGE_SETTINGS');
+ const dirty=Boolean(passwordDirty||draft&&base&&!equal(draft,base)||section==='policies'&&policy&&!equal(policy,policyBase));
+ const blocker=useBlocker(dirty);const replayLogout=useRef(false);const processing=useRef(false);
+ useBeforeUnload(e=>{if(dirty){e.preventDefault();e.returnValue='';}});
+ useEffect(()=>{const handler=e=>{const target=e.target.closest('[data-admin-action="logout"]');if(target&&dirty&&!replayLogout.current){e.preventDefault();e.stopPropagation();setConfirm({title:"Your changes haven't been saved.",discard:true,action:()=>{setPasswordDirty(false);setDraft(copy(base));setPolicy(copy(policyBase));replayLogout.current=true;target.click();replayLogout.current=false;}});}};document.addEventListener('click',handler,true);return()=>document.removeEventListener('click',handler,true);},[dirty,base,policyBase]);
+ useEffect(()=>{if(!toast)return;const timer=setTimeout(()=>setToast(''),4500);return()=>clearTimeout(timer);},[toast]);
+ const load=async()=>setData(await request('/config'));
+ useEffect(()=>{let live=true;request('/config').then(result=>{if(live)setData(result);}).catch(e=>{if(live)setError(e.message);});return()=>{live=false;};},[]);
+ useEffect(()=>{if(!data)return;const value=section==='account'?{name:data.account.name,email:data.account.email,phone:data.account.phone||'',avatarUrl:data.account.avatarUrl||'',currentPassword:''}:data[section];setDraft(copy(value||{}));setBase(copy(value||{}));setError('');},[section,data]);
+ useEffect(()=>{if(!data)return;let live=true;const path={shipping:'/shipping/zones',policies:'/policies',security:'/security',permissions:'/staff'}[section];if(!path)return;setAuxLoading(true);request(path).then(result=>{if(!live)return;if(section==='shipping')setZones(result);if(section==='policies'){setPolicies(result);const chosen=result[0];setPolicyId(chosen.id);setPolicy(copy(chosen));setPolicyBase(copy(chosen));}if(section==='security')setSecurity(result);if(section==='permissions')setStaff(result);}).catch(e=>{if(live)setError(e.message);}).finally(()=>{if(live)setAuxLoading(false);});return()=>{live=false;};},[section,data]);
+ async function run(task,success=true){if(processing.current)return;processing.current=true;setBusy(true);setError('');try{await task();if(success)setToast('Settings updated successfully.');}catch(e){setError(e.message);}finally{processing.current=false;setBusy(false);}}
+ const change=(key,value)=>setDraft(current=>({...current,[key]:value}));const ask=(title,action)=>setConfirm({title,action});
+ const save=()=>run(async()=>{if(section==='account'){await request('/account',{method:'PATCH',body:draft});await refreshAdmin();}else await request(`/${section}`,{method:'PATCH',body:{values:draft,version:data.meta.sectionVersions[section]}});await load();localStorage.setItem('nobelle-settings-updated',String(Date.now()));window.dispatchEvent(new Event('nobelle-settings-updated'));});
+ const submit=e=>{e.preventDefault();if(section==='general'&&draft.status!==base.status)return ask(`Change store status to ${draft.status==='MAINTENANCE'?'Maintenance Mode':'Active'}?`,save);if(section==='payments'&&(draft.mode==='LIVE'&&base.mode!=='LIVE'||base.enabled&&!draft.enabled||base.card&&!draft.card||base.bankTransfer&&!draft.bankTransfer))return ask(draft.mode==='LIVE'&&base.mode!=='LIVE'?'Switch to Live Mode? Real payments will be charged. Verify your live server credentials and checkout before continuing.':'Disable this payment method? This can prevent customers from completing payment.',save);save();};
+ const field=(key,label,opts={})=><Field key={key} label={label} value={draft?.[key]} onChange={v=>change(key,v)} {...opts}/>;const toggle=(key,label,help)=><Toggle key={key} label={label} help={help} checked={draft?.[key]} onChange={v=>change(key,v)}/>;const image=(key,label,kind)=><ImageField key={key} label={label} kind={kind} value={draft?.[key]} onChange={v=>change(key,v)} run={run} busy={busy}/>;
+ const refreshZones=async()=>setZones(await request('/shipping/zones'));
+ const editZone=row=>setModal({type:'zone',id:row?.id,values:row?{name:row.name,country:row.country,states:row.states.join(', '),fee:Number(row.fee),estimatedDays:row.estimatedDays,freeDeliveryThreshold:row.freeDeliveryThreshold===null?'':Number(row.freeDeliveryThreshold),isActive:row.isActive}:{name:'',country:draft.defaultCountry,states:'',fee:0,estimatedDays:'1–3 business days',freeDeliveryThreshold:'',isActive:true}});
+ const editStaff=row=>setModal({type:'staff',id:row?.id,values:row?{name:row.name,email:row.email,role:row.role,isActive:row.isActive,password:''}:{name:'',email:'',role:'MANAGER',isActive:true,password:''}});
+ const saveModal=e=>{e.preventDefault();run(async()=>{const values={...modal.values};let path;if(modal.type==='zone'){values.states=values.states.split(',').map(s=>s.trim()).filter(Boolean);values.freeDeliveryThreshold=values.freeDeliveryThreshold===''?null:Number(values.freeDeliveryThreshold);path='/shipping/zones';}else{if(!values.password)delete values.password;path='/staff';}await request(`${path}${modal.id?`/${modal.id}`:''}`,{method:modal.id?'PATCH':'POST',body:values});if(modal.type==='zone')await refreshZones();else setStaff(await request('/staff'));setModal(null);});};
+ const selectPolicy=id=>{const act=()=>{const next=policies.find(p=>p.id===id);setPolicyId(id);setPolicy(copy(next));setPolicyBase(copy(next));};if(!equal(policy,policyBase))setConfirm({title:"Your changes haven't been saved.",discard:true,action:act});else act();};
+ const savePolicy=status=>run(async()=>{const result=await request(`/policies/${policyId}`,{method:'PATCH',body:{title:policy.title,content:policy.content,status,version:policyBase.lastUpdated}});setPolicy(copy(result));setPolicyBase(copy(result));setPolicies(rows=>rows.map(p=>p.id===policyId?result:p));});
+ const refreshSecurity=async()=>setSecurity(await request('/security'));
+ const sizes=draft?.sizes || [],colours=draft?.colours || [];
+ if(!data)return <div className="ns-settings"><h1>Settings</h1>{error?<p role="alert">{error}<button onClick={()=>run(load,false)}>Retry</button></p>:<p role="status">Loading settings...</p>}</div>;
+ return <div className="ns-settings"><div className="ns-page-heading"><p className="ns-eyebrow">NOBELLE ADMIN</p><h1>Settings</h1><p>Manage your store, account, preferences, and system configuration.</p></div><div className="ns-layout"><nav className="ns-navigation" aria-label="Settings sections">{sections.filter(([key])=>allowed(key)).map(([key,label,Icon])=><Link key={key} to={`?tab=${key}`} className={key===section?'active':''} aria-current={key===section?'page':undefined}><Icon size={18}/>{label}</Link>)}</nav><label className="ns-mobile-nav">Settings section<select value={section} onChange={e=>setParams({tab:e.target.value})}>{sections.filter(([key])=>allowed(key)).map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label><div className="ns-content">{error&&<div role="alert" className="ns-error">{error}</div>}{!allowed(section)?<Card title="Access restricted"><p>Your role cannot manage this section.</p><Link to="?tab=account">Open Account & Profile</Link></Card>:draft&&<>{auxLoading&&<p role="status">Loading section...</p>}
+ {section==='general'&&<form onSubmit={submit}><Card title="General Settings" description="Set the essentials for your NOBELLE store."><div className="ns-grid">{field('storeName','Store Name',{required:true})}{field('currency','Default Currency',{options:[['NGN','NGN — Nigerian Naira (₦)'],['USD','USD — US Dollar'],['GBP','GBP — British Pound'],['EUR','EUR — Euro'],['GHS','GHS — Ghanaian Cedi'],['KES','KES — Kenyan Shilling'],['ZAR','ZAR — South African Rand']],disabled:data.meta.currencyLocked,help:data.meta.currencyLocked?'Currency is locked after the first order.':'Payment currency must be enabled on your Paystack account.'})}{field('timezone','Timezone',{required:true,help:'Use an IANA timezone, for example Africa/Lagos.'})}{field('language','Language',{options:[['en','English']]})}{field('dateFormat','Date Format',{options:['DD/MM/YYYY','MM/DD/YYYY','YYYY-MM-DD','DD MMM YYYY']})}{field('status','Store Status',{options:[['ACTIVE','Active'],['MAINTENANCE','Maintenance Mode']]})}</div><Toggle label="Maintenance Mode" help="Display a maintenance message and pause new shopping and checkout." checked={draft.status==='MAINTENANCE'} onChange={v=>change('status',v?'MAINTENANCE':'ACTIVE')}/>{field('maintenanceMessage','Maintenance message',{type:'textarea',required:true})}</Card><Save section={section} busy={busy} dirty={!equal(draft,base)}/></form>}
+ {section==='store'&&<form onSubmit={submit}><Card title="Store Information" description="Your business identity and customer contact details."><div className="ns-grid">{image('logoUrl','Logo','logo')}{image('faviconUrl','Favicon','favicon')}{field('businessName','Business / store name',{required:true})}{field('businessEmail','Business email',{type:'email'})}{field('supportEmail','Customer support email',{type:'email'})}{field('phone','Phone number',{type:'tel'})}{field('whatsapp','WhatsApp number',{type:'tel'})}{field('address','Business address')}{field('city','City')}{field('state','State')}{field('country','Country',{required:true})}{['instagram','facebook','tiktok','twitter'].map(key=>field(key,key==='twitter'?'X / Twitter':title(key),{type:'url'}))}</div></Card><Save section={section} busy={busy} dirty={!equal(draft,base)}/></form>}
+ {section==='account'&&<><form onSubmit={submit}><Card title="Account & Profile" description="Manage your personal administrator account.">{image('avatarUrl','Profile picture','avatar')}<div className="ns-grid">{field('name','Full name',{required:true})}{field('email','Email address',{type:'email',required:true})}{field('phone','Phone number',{type:'tel'})}<Field label="Role" value={data.meta.roleLabels[data.account.role]} disabled/></div>{draft.email!==base.email&&<PasswordField label="Current password to change email" value={draft.currentPassword} onChange={v=>change('currentPassword',v)}/>}<p className="ns-help">Your email address is your sign-in username.</p></Card><Save section={section} busy={busy} dirty={!equal(draft,base)}/></form><Card title="Change Password"><PasswordForm key={section} run={run} busy={busy} onDirty={setPasswordDirty}/></Card></>}
+ {section==='payments'&&<form onSubmit={submit}><Card title="Payment Settings" description="Manage the Paystack integration connected to this store.">{toggle('enabled','Paystack payments')}{toggle('card','Card payments')}{toggle('bankTransfer','Bank transfer')}<div className="ns-grid">{field('mode','Payment Mode',{options:[['TEST','Test Mode'],['LIVE','Live Mode']]})}{field('checkoutLabel','Checkout button text',{required:true})}</div><div className="ns-note">{data.meta.payments.modes.find(m=>m.mode===draft.mode)?.configured?'Server credentials configured.':'Server credentials are not configured for this mode. Configure the server environment before enabling payments.'}</div><Field label="Public payment key" value={data.meta.payments.modes.find(m=>m.mode===draft.mode)?.publicKey||'Not configured'} disabled/><p className="ns-help">Secret credentials are managed on the server and are never displayed here.</p></Card><Save section={section} busy={busy} dirty={!equal(draft,base)}/></form>}
+ {section==='shipping'&&<><form onSubmit={submit}><Card title="Shipping & Delivery" description="Set defaults and manage delivery zones."><div className="ns-grid">{field('defaultCountry','Default country',{required:true})}<Field label="Default free delivery threshold" type="number" min={0} step="0.01" value={draft.freeDeliveryThreshold} onChange={v=>change('freeDeliveryThreshold',v===''?null:v)} help="Leave blank to disable. Zone thresholds take priority."/></div></Card><Save section={section} busy={busy} dirty={!equal(draft,base)}/></form><Card title="Delivery Zones"><button type="button" className="ns-primary" disabled={busy} onClick={()=>editZone()}>Add Delivery Zone</button><div className="ns-table-wrap"><table><thead><tr>{['Zone','Region','Fee','Delivery period','Free above','Status','Actions'].map(h=><th key={h}>{h}</th>)}</tr></thead><tbody>{zones.map(row=><tr key={row.id}><td><strong>{row.name}</strong><small>{row.country}</small></td><td>{row.states.join(', ')}</td><td>{Number(row.fee).toLocaleString()}</td><td>{row.estimatedDays}</td><td>{row.freeDeliveryThreshold===null?'—':Number(row.freeDeliveryThreshold).toLocaleString()}</td><td>{row.isActive?'Active':'Inactive'}</td><td><button disabled={busy} onClick={()=>editZone(row)}>Edit</button><button disabled={busy} onClick={()=>run(async()=>{await request(`/shipping/zones/${row.id}`,{method:'PATCH',body:{name:row.name,country:row.country,states:row.states,fee:Number(row.fee),estimatedDays:row.estimatedDays,freeDeliveryThreshold:row.freeDeliveryThreshold===null?null:Number(row.freeDeliveryThreshold),isActive:!row.isActive}});await refreshZones();})}>{row.isActive?'Deactivate':'Activate'}</button><button disabled={busy} className="ns-danger-text" onClick={()=>ask(`Delete delivery zone “${row.name}”?`,()=>run(async()=>{await request(`/shipping/zones/${row.id}`,{method:'DELETE'});await refreshZones();}))}>Delete</button></td></tr>)}</tbody></table>{!zones.length&&!auxLoading&&<p>No delivery zones. Add a zone to configure checkout delivery.</p>}</div></Card></>}
+ {section==='orders'&&<form onSubmit={submit}><Card title="Order Settings" description="Control processing, cancellation, returns and inventory."><div className="ns-grid">{field('prefix','Order Number Prefix',{required:true,help:`Example: ${draft.prefix}1028`})}{field('confirmation','Order confirmation',{options:[['AUTOMATIC','Automatic after payment'],['MANUAL','Manual confirmation']]})}{field('cancellationPeriodMinutes','Cancellation period (minutes)',{type:'number',min:1,max:10080,required:true})}{field('returnPeriodDays','Return period (days)',{type:'number',min:0,max:365,required:true,help:'Set to 0 to disable returns.'})}{field('refundRule','Refund rules',{options:[['RECEIVED_GOODS','Refund after goods are received'],['MANUAL_REVIEW','Manual review of approved returns'],['DISABLED','Disable refunds']]})}</div>{toggle('allowCancellation','Allow customer cancellation','Customers may cancel unpaid orders within the cancellation period.')}{toggle('invoicesEnabled','Invoice generation')}{toggle('orderNotifications','Order notifications')}<fieldset className="ns-radio"><legend>Inventory deduction</legend>{[['CREATION','When order is created'],['PAYMENT','After successful payment'],['CONFIRMATION','When order is confirmed']].map(([value,label])=><label key={value}><input type="radio" name="stockDeduction" checked={draft.stockDeduction===value} onChange={()=>change('stockDeduction',value)}/>{label}</label>)}</fieldset><p className="ns-help">Inventory is reserved during checkout. These rules apply to newly created orders.</p></Card><Save section={section} busy={busy} dirty={!equal(draft,base)}/></form>}
+ {section==='products'&&<form onSubmit={submit}><Card title="Sizes" description="Available in the product editor."><div className="ns-size-add"><input aria-label="New size" value={size} maxLength={30} onChange={e=>setSize(e.target.value)}/><button type="button" onClick={()=>{const value=size.trim();if(!value||sizes.some(s=>s.toLowerCase()===value.toLowerCase()))return setError('Enter a unique size.');change('sizes',[...sizes,value]);setSize('');}}>Add Size</button></div>{sizes.map((value,index)=><div className="ns-size-row" key={index}><input aria-label={`Size ${index+1}`} value={value} onChange={e=>change('sizes',sizes.map((s,i)=>i===index?e.target.value:s))}/><button type="button" aria-label={`Move ${value} up`} disabled={!index} onClick={()=>{const next=[...sizes];[next[index-1],next[index]]=[next[index],next[index-1]];change('sizes',next);}}><ArrowUp size={16}/></button><button type="button" aria-label={`Move ${value} down`} disabled={index===sizes.length-1} onClick={()=>{const next=[...sizes];[next[index+1],next[index]]=[next[index],next[index+1]];change('sizes',next);}}><ArrowDown size={16}/></button><button type="button" aria-label={`Delete size ${value}`} disabled={sizes.length===1} onClick={()=>change('sizes',sizes.filter((_,i)=>i!==index))}><X size={16}/></button></div>)}</Card><Card title="Colours"><button type="button" onClick={()=>change('colours',[...colours,{id:crypto.randomUUID(),name:'',hex:'#800020',active:true}])}>Add Colour</button>{colours.map((colour,index)=><div className="ns-colour-row" key={colour.id}><input aria-label={`Colour ${index+1} name`} value={colour.name} placeholder="Colour name" onChange={e=>change('colours',colours.map((c,i)=>i===index?{...c,name:e.target.value}:c))}/><input type="color" aria-label={`Colour ${index+1} value`} value={colour.hex} onChange={e=>change('colours',colours.map((c,i)=>i===index?{...c,hex:e.target.value}:c))}/><span>{colour.hex}</span><label><input type="checkbox" checked={colour.active} onChange={e=>change('colours',colours.map((c,i)=>i===index?{...c,active:e.target.checked}:c))}/>Active</label><button type="button" aria-label={`Delete colour ${colour.name||index+1}`} onClick={()=>change('colours',colours.filter((_,i)=>i!==index))}><X size={16}/></button></div>)}</Card><Card title="Inventory & Reviews"><div className="ns-grid">{field('lowStockThreshold','Default Low Stock Threshold',{type:'number',min:0,max:100000,required:true,help:'Default for new inventory records.'})}{field('outOfStockVisibility','Out-of-stock visibility',{options:[['SHOW','Show products'],['HIDE','Hide products']]})}</div>{toggle('lowStockNotifications','Low-stock notifications')}{toggle('allowOutOfStockPurchases','Allow purchases when out of stock','Backorders are fulfilled when new stock is received.')}{toggle('automaticSku','Automatic SKU generation')}{toggle('reviewsEnabled','Enable product reviews')}</Card><Save section={section} busy={busy} dirty={!equal(draft,base)}/></form>}
+ {section==='notifications'&&<form onSubmit={submit}><Card title="Notification Preferences" description="Choose events that notify administrators. Customer payment and security notices remain enabled."><div className="ns-table-wrap"><table><thead><tr><th>Event</th><th>Dashboard Notification</th><th>Email Notification</th></tr></thead><tbody>{Object.entries(events).map(([key,label])=><tr key={key}><td>{label}</td>{['dashboard','email'].map(channel=><td key={channel}><input type="checkbox" role="switch" aria-label={`${label} ${channel}`} checked={Boolean(draft[key]?.[channel])} onChange={e=>change(key,{...draft[key],[channel]:e.target.checked})}/></td>)}</tr>)}</tbody></table></div><p className="ns-help">Email notifications use your business email, or active Super Administrator emails when no business email is configured.</p></Card><Save section={section} busy={busy} dirty={!equal(draft,base)}/></form>}
+ {section==='website'&&<form onSubmit={submit}><Card title="Global Website Settings" description="Manage branding, announcement, footer and default SEO."><div className="ns-grid">{image('logoUrl','Website logo','logo')}{image('faviconUrl','Website favicon','favicon')}</div>{toggle('announcementEnabled','Show announcement bar')}{field('announcementText','Announcement text')}{field('footerText','Footer text',{type:'textarea'})}{field('copyrightText','Copyright text')}{field('seoTitle','Default SEO title')}{field('seoDescription','Default SEO description',{type:'textarea'})}{image('socialImage','Social sharing image','social')}<div className="ns-note">Contact information and social links are shared with <Link to="?tab=store">Store Information</Link>. Homepage sections, banners and featured products remain in <Link to="/admin/website">Website Manager</Link>.</div></Card><Save section={section} busy={busy} dirty={!equal(draft,base)}/></form>}
+ {section==='policies'&&policy&&<Card title="Policies" description="Draft changes remain private until publication."><div className="ns-grid"><Field label="Policy" value={policyId} onChange={selectPolicy} options={policies.map(p=>[p.id,p.title])}/><Field label="Policy title" value={policy.title} onChange={v=>setPolicy({...policy,title:v})} required/></div><div className="ns-policy-meta"><span>{policy.status==='PUBLISHED'?'Published':'Draft'}</span><small>Last updated: {date(policy.lastUpdated)}</small>{policy.hasPublished&&<small>Published version is live</small>}</div><RichEditor value={policy.content} onChange={v=>setPolicy({...policy,content:v,status:'DRAFT'})}/><div className="ns-actions"><button disabled={busy} type="button" onClick={()=>savePolicy('DRAFT')}>Save Draft</button><button type="button" onClick={()=>setModal({type:'preview'})}>Preview</button><button disabled={busy} type="button" className="ns-primary" onClick={()=>ask('Publish this policy? The customer-facing page will be updated.',()=>savePolicy('PUBLISHED'))}>Publish</button></div></Card>}
+ {section==='security'&&<><Card title="Password"><PasswordForm key={section} run={run} busy={busy} onDirty={setPasswordDirty}/></Card><Card title="Two-Factor Authentication"><p>Two-factor authentication is not supported by the current authentication backend.</p></Card>{security&&<><Card title="Active Sessions" description="Session locations are not collected by this store."><div className="ns-table-wrap"><table><thead><tr>{['Device / Browser','Login','Last activity','Session','Actions'].map(h=><th key={h}>{h}</th>)}</tr></thead><tbody>{security.sessions.map(s=><tr key={s.id}><td>{s.device}<small>{s.browser}</small></td><td>{date(s.loginAt)}</td><td>{date(s.lastActiveAt)}</td><td>{s.current?'Current session':'Other device'}</td><td>{!s.current&&<button disabled={busy} onClick={()=>ask('Terminate this session? The device will need to sign in again.',()=>run(async()=>{await request(`/security/sessions/${s.id}`,{method:'DELETE'});await refreshSecurity();}))}>Terminate</button>}</td></tr>)}</tbody></table></div><button disabled={busy||!security.sessions.some(s=>!s.current)} className="ns-danger-text" onClick={()=>ask('Log out all other devices?',()=>run(async()=>{await request('/security/sessions',{method:'DELETE'});await refreshSecurity();}))}>Log Out All Other Devices</button></Card><Card title="Login History"><div className="ns-table-wrap"><table><thead><tr><th>Date</th><th>Device / Browser</th><th>Status</th></tr></thead><tbody>{security.history.map(h=><tr key={h.id}><td>{date(h.date)}</td><td>{h.device}<small>{h.browser}</small></td><td>{h.status}</td></tr>)}</tbody></table>{!security.history.length&&<p>No recent login activity.</p>}</div></Card></>}</>}
+ {section==='permissions'&&<><Card title="Admin & Permissions" description="Manage staff access. API permissions are enforced by the backend."><button type="button" className="ns-primary" disabled={busy} onClick={()=>editStaff()}>Add Staff Member</button><div className="ns-table-wrap"><table><thead><tr>{['Profile','Name / Email','Role','Status','Last active','Actions'].map(h=><th key={h}>{h}</th>)}</tr></thead><tbody>{staff.map(s=><tr key={s.id}><td>{s.avatarUrl?<img className="ns-avatar" src={s.avatarUrl} alt=""/>:<span className="ns-avatar">{s.name[0]}</span>}</td><td>{s.name}<small>{s.email}</small></td><td>{data.meta.roleLabels[s.role]}</td><td>{s.isActive?'Active':'Inactive'}</td><td>{date(s.lastActiveAt)}</td><td><button disabled={busy} onClick={()=>editStaff(s)}>Edit</button><button disabled={busy||s.id===data.account.id} className="ns-danger-text" onClick={()=>ask(`Delete staff account for ${s.name}? Access will be revoked; order and audit history will be retained.`,()=>run(async()=>{await request(`/staff/${s.id}`,{method:'DELETE'});setStaff(await request('/staff'));}))}>Delete</button></td></tr>)}</tbody></table></div></Card>{draft.roles&&<form onSubmit={submit}><Card title="Role Permissions" description="Changes revoke affected staff sessions immediately."><Field label="Staff role" value={role} options={Object.entries(data.meta.roleLabels)} onChange={setRole}/><div className="ns-permissions">{['PRODUCTS','INVENTORY','ORDERS','REFUNDS','CUSTOMERS','PROMOTIONS','WEBSITE','ANALYTICS','PAYMENTS','SETTINGS','STAFF'].map(group=>{const list=data.meta.permissionList.filter(p=>p.endsWith(group));return list.length>0&&<fieldset key={group}><legend>{title(group)}</legend>{list.map(permission=><label key={permission}><input type="checkbox" checked={draft.roles[role]?.includes(permission)||false} disabled={role==='SUPER_ADMIN'||data.account.role!=='SUPER_ADMIN'} onChange={e=>change('roles',{...draft.roles,[role]:e.target.checked?[...(draft.roles[role]||[]),permission]:draft.roles[role].filter(p=>p!==permission)})}/>{title(permission)}</label>)}</fieldset>;})}</div><p className="ns-help">Super Administrator permissions are fixed. Only a Super Administrator can change role permissions.</p></Card>{data.account.role==='SUPER_ADMIN'&&<Save section={section} busy={busy} dirty={!equal(draft,base)}/>}</form>}</>}
+ </>}</div></div>{toast&&<div className="ns-toast" role="status">{toast}</div>}
+ {(blocker.state==='blocked'||confirm)&&<Modal title={blocker.state==='blocked'?"Your changes haven't been saved.":confirm.title} onClose={()=>{if(blocker.state==='blocked')blocker.reset();else setConfirm(null);}}><p>{blocker.state==='blocked'||confirm?.discard?'Discard your changes to continue, or keep editing this section.':'Please confirm this action before continuing.'}</p><div className="ns-actions"><button type="button" onClick={()=>{if(blocker.state==='blocked')blocker.reset();else setConfirm(null);}}>{blocker.state==='blocked'||confirm?.discard?'Continue Editing':'Cancel'}</button><button type="button" className="ns-primary" disabled={busy} onClick={()=>{if(blocker.state==='blocked'){setPasswordDirty(false);setDraft(copy(base));setPolicy(copy(policyBase));blocker.proceed();}else{const action=confirm.action;setConfirm(null);action();}}}>{blocker.state==='blocked'||confirm?.discard?'Discard Changes':'Confirm'}</button></div></Modal>}
+ {modal&&modal.type!=='preview'&&<Modal title={modal.type==='zone'?'Delivery Zone':'Staff Member'} onClose={()=>{if(!busy)setModal(null);}}><form onSubmit={saveModal}><div className="ns-grid">{(modal.type==='zone'?['name','country','states','fee','estimatedDays','freeDeliveryThreshold']:['name','email','role','password']).map(key=><Field key={key} label={{name:'Name',country:'Country',states:'States / regions (comma separated)',fee:'Delivery fee',estimatedDays:'Estimated delivery period',freeDeliveryThreshold:'Free delivery threshold',email:'Email',role:'Role',password:modal.id?'New password (optional)':'Initial password'}[key]} value={modal.values[key]} required={!['freeDeliveryThreshold','password'].includes(key)||key==='password'&&!modal.id} type={['fee','freeDeliveryThreshold'].includes(key)?'number':key==='password'?'password':key==='email'?'email':'text'} min={0} step="0.01" options={key==='role'?Object.entries(data.meta.roleLabels):undefined} onChange={v=>setModal({...modal,values:{...modal.values,[key]:v}})}/>)}</div><Toggle label="Active" checked={modal.values.isActive} onChange={v=>setModal({...modal,values:{...modal.values,isActive:v}})}/><div className="ns-actions"><button type="button" disabled={busy} onClick={()=>setModal(null)}>Cancel</button><button disabled={busy} className="ns-primary">{busy?'Saving...':modal.type==='zone'?'Save Delivery Zone':'Save Staff Member'}</button></div></form></Modal>}
+ {modal?.type==='preview'&&<Modal title={policy.title} onClose={()=>setModal(null)}><div className="ns-policy-preview" dangerouslySetInnerHTML={{__html:DOMPurify.sanitize(policy.content)}}/><button type="button" onClick={()=>setModal(null)}>Close Preview</button></Modal>}
+ </div>;
 }
+function Save({section,busy,dirty}) {return <div className="ns-save"><span>{dirty?'Unsaved changes':'All changes saved'}</span><button className="ns-primary" disabled={busy||!dirty}>{busy?'Saving...':labels[section]}</button></div>;}

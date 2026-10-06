@@ -6,6 +6,9 @@ export class EmailService {
     host: ENV.EMAIL_HOST,
     port: ENV.EMAIL_PORT,
     secure: ENV.EMAIL_PORT === 465,
+    requireTLS: ENV.NODE_ENV === 'production',
+    disableFileAccess: true, disableUrlAccess: true,
+    connectionTimeout: 15000, greetingTimeout: 15000, socketTimeout: 30000,
     auth: ENV.EMAIL_USER
       ? {
           user: ENV.EMAIL_USER,
@@ -15,21 +18,9 @@ export class EmailService {
   });
 
   static async sendEmail(to: string, subject: string, html: string, text?: string) {
-    if (!ENV.EMAIL_HOST) {
-      console.log(`[Email Mock] To: ${to} | Subject: ${subject}`);
-      return;
-    }
-    try {
-      await this.transporter.sendMail({
-        from: ENV.EMAIL_FROM,
-        to,
-        subject,
-        html,
-        text: text || html.replace(/<[^>]+>/g, ''),
-      });
-    } catch (error) {
-      console.error('[EmailService Error]:', error);
-    }
+    if (!ENV.EMAIL_HOST) throw new Error('Email provider is not configured');
+    await this.transporter.sendMail({ from: ENV.EMAIL_FROM, to, subject, html,
+      text: text || html.replace(/<[^>]+>/g, '') });
   }
 
   static async sendOrderConfirmation(to: string, orderNumber: string, total: string) {

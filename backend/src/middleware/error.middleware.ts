@@ -24,9 +24,20 @@ export function errorHandler(
     } else if (prismaErr.code === 'P2025') {
       statusCode = 404;
       message = 'Record to update/delete was not found';
+    } else if (prismaErr.code === 'P2003') {
+      statusCode = 409;
+      message = 'This record has related data or references an unavailable record';
+    } else if (prismaErr.code === 'P2004') {
+      statusCode = 422;
+      message = 'The record does not meet the required constraints';
+    } else if (prismaErr.code === 'P2034') {
+      statusCode = 409;
+      message = 'A concurrent update occurred. Please retry';
     }
   }
 
+  if (err.name === 'MulterError') { statusCode = 422; message = 'Upload limit exceeded. Use at most 10 images, each under 5 MB.'; }
+  if (err.name === 'SyntaxError' && (err as any).status === 400) { statusCode = 400; message = 'Invalid JSON request'; }
   if (ENV.NODE_ENV === 'development') {
     console.error('[Error Details]:', err);
   }
@@ -34,6 +45,6 @@ export function errorHandler(
   return res.status(statusCode).json({
     success: false,
     message,
-    ...(errors && { errors }),
+    errors: errors || [],
   });
 }

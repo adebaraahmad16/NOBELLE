@@ -1,7 +1,7 @@
 {
   "name": "nobelle-backend",
   "version": "1.0.0",
-  "description": "Production-ready REST API for NOBELLE fashion e-commerce platform",
+  "description": "NOBELLE commerce API",
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
@@ -10,13 +10,24 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
-    "seed:admin": "tsx scripts/seed-admin.ts"
+    "seed:admin": "tsx scripts/seed-admin.ts",
+    "test": "tsc -p tsconfig.test.json && node --test --test-concurrency=1 .test-build/tests/unit.test.js .test-build/tests/settings.test.js .test-build/tests/database.test.js .test-build/tests/settings.database.test.js",
+    "test:unit": "tsc -p tsconfig.test.json && node --test .test-build/tests/unit.test.js .test-build/tests/settings.test.js",
+    "test:integration": "tsc -p tsconfig.test.json && node --test .test-build/tests/database.test.js .test-build/tests/settings.database.test.js"
   },
-  "keywords": ["fashion", "ecommerce", "express", "prisma", "typescript", "paystack"],
+  "keywords": [
+    "fashion",
+    "ecommerce",
+    "express",
+    "prisma",
+    "typescript",
+    "paystack"
+  ],
   "author": "NOBELLE",
   "license": "UNLICENSED",
   "dependencies": {
     "@prisma/client": "^6.4.1",
+    "@types/sanitize-html": "^2.16.2",
     "axios": "^1.7.9",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
@@ -24,8 +35,9 @@
     "express": "^4.21.2",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
-    "multer": "^1.4.5-lts.1",
-    "nodemailer": "^6.10.0",
+    "multer": "^2.0.2",
+    "nodemailer": "^10.0.15",
+    "sanitize-html": "^2.18.0",
     "socket.io": "^4.8.1",
     "zod": "^3.24.2"
   },
@@ -40,5 +52,8 @@
     "prisma": "^6.4.1",
     "tsx": "^4.19.3",
     "typescript": "^5.7.3"
+  },
+  "overrides": {
+    "deepmerge-ts": "^8.0.0"
   }
 }

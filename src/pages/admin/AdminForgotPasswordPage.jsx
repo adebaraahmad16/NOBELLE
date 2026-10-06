@@ -58,7 +58,7 @@ export default function AdminForgotPasswordPage() {
       <section
         className="relative lg:w-[52%] flex flex-col justify-between overflow-hidden"
         style={{
-          background: `linear-gradient(160deg, ${BURGUNDY_RICH} 0%, ${BURGUNDY} 45%, #551622 100%)`,
+          background: '#91364d',
           minHeight: '200px',
         }}
       >
@@ -66,7 +66,7 @@ export default function AdminForgotPasswordPage() {
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              'radial-gradient(ellipse 70% 55% at 18% 22%, rgba(217,139,151,0.10) 0%, transparent 60%), radial-gradient(ellipse 55% 45% at 85% 80%, rgba(100,31,45,0.9) 0%, transparent 70%)',
+              'none',
           }}
         />
         <svg
@@ -112,7 +112,7 @@ export default function AdminForgotPasswordPage() {
         <div className="relative z-10 hidden lg:flex flex-col justify-center flex-1 px-14 pb-8">
           <div
             className="w-10 h-px mb-8"
-            style={{ background: 'linear-gradient(90deg, #D98B97, transparent)' }}
+            style={{ background: '#d98b97' }}
           />
           <p className="font-serif text-4xl leading-snug max-w-md" style={{ color: '#F8F3EC' }}>
             Recover access to your studio.
@@ -126,7 +126,7 @@ export default function AdminForgotPasswordPage() {
       {/* Right panel — form */}
       <section
         className="relative flex-1 flex items-center justify-center p-6 sm:p-10"
-        style={{ background: 'linear-gradient(175deg, #FCFAF7 0%, #F8F3EC 100%)' }}
+        style={{ background: '#faf8f6' }}
       >
         <div className="w-full max-w-md">
           <div className="lg:hidden text-center mb-8">

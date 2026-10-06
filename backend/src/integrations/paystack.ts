@@ -1,11 +1,15 @@
 import axios from 'axios';
 import crypto from 'crypto';
 import { ENV } from '../config/env';
+import { paymentCredentials, paymentModeDefault, type PaymentMode } from '../services/paymentConfiguration';
 import { ApiError } from '../utils/apiError';
 
 export interface InitializePaymentParams {
+  mode?: PaymentMode;
+  currency?: string;
+  channels?: string[];
   email: string;
-  amount: number; // in kobo or full naira (Paystack takes kobo: amount * 100)
+  amount: number; // integer kobo
   reference: string;
   callbackUrl?: string;
   metadata?: Record<string, any>;
@@ -14,9 +18,9 @@ export interface InitializePaymentParams {
 export class PaystackService {
   private static readonly BASE_URL = 'https://api.paystack.co';
 
-  private static get headers() {
+  private static headers(mode?: PaymentMode) {
     return {
-      Authorization: `Bearer ${ENV.PAYSTACK_SECRET_KEY}`,
+      Authorization: `Bearer ${mode ? paymentCredentials(mode).secret : ENV.PAYSTACK_SECRET_KEY || paymentCredentials(paymentModeDefault()).secret}`,
       'Content-Type': 'application/json',
     };
   }
@@ -27,12 +31,14 @@ export class PaystackService {
         `${this.BASE_URL}/transaction/initialize`,
         {
           email: params.email,
-          amount: Math.round(params.amount * 100), // convert to kobo
+          amount: params.amount, // integer kobo
+          currency: params.currency || 'NGN',
+          channels: params.channels,
           reference: params.reference,
           callback_url: params.callbackUrl,
           metadata: params.metadata,
         },
-        { headers: this.headers }
+        { headers: this.headers(params.mode), timeout: 15000 }
       );
       return response.data.data;
     } catch (error: any) {
@@ -41,11 +47,11 @@ export class PaystackService {
     }
   }
 
-  static async verifyPayment(reference: string) {
+  static async verifyPayment(reference: string, mode?: PaymentMode) {
     try {
       const response = await axios.get(
         `${this.BASE_URL}/transaction/verify/${encodeURIComponent(reference)}`,
-        { headers: this.headers }
+        { headers: this.headers(mode), timeout: 15000 }
       );
       return response.data.data;
     } catch (error: any) {
@@ -54,11 +60,9 @@ export class PaystackService {
     }
   }
 
-  static verifyWebhookSignature(signature: string, payload: any): boolean {
-    const hash = crypto
-      .createHmac('sha512', ENV.PAYSTACK_SECRET_KEY)
-      .update(typeof payload === 'string' ? payload : JSON.stringify(payload))
-      .digest('hex');
-    return hash === signature;
+  static verifyWebhookSignature(signature: string, payload: Buffer): boolean {
+    if (!Buffer.isBuffer(payload) || typeof signature !== 'string' || !/^[a-f0-9]{128}$/i.test(signature)) return false;
+    const secrets=[ENV.PAYSTACK_SECRET_KEY,paymentCredentials('TEST').secret,paymentCredentials('LIVE').secret].filter(Boolean);
+    return secrets.some(secret=>crypto.timingSafeEqual(crypto.createHmac('sha512',secret).update(payload).digest(),Buffer.from(signature,'hex')));
   }
 }
