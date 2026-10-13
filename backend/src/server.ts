@@ -1,6 +1,6 @@
 import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
-import app from './app';
+import app, { isOriginAllowed } from './app';
 import { ENV } from './config/env';
 import prisma from './repositories/prisma';
 import { validateEnvironment } from './config/validateEnv';
@@ -11,10 +11,13 @@ const server = http.createServer(app);
 // Real-time WebSockets
 export const io = new SocketIOServer(server, {
   cors: {
-    origin: [
-      ENV.FRONTEND_URL,
-      ENV.ADMIN_URL,
-    ],
+    origin: (origin, callback) => {
+      if (!origin || isOriginAllowed(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   },
 });

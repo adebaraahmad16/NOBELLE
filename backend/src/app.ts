@@ -12,10 +12,11 @@ import openapi from './config/openapi.json';
 const app = express();
 app.disable('x-powered-by');
 
-// Allow any localhost origin in development; strict allowlist in production
+// Allow any localhost origin in development, Vercel deployments, or configured origins
 const allowedOrigins = [ENV.FRONTEND_URL, ENV.ADMIN_URL];
-const isOriginAllowed = (origin: string) => {
+export const isOriginAllowed = (origin: string) => {
   if (allowedOrigins.includes(origin)) return true;
+  if (/^https:\/\/nobelle[a-z0-9-]*\.vercel\.app\/?$/.test(origin)) return true;
   if (ENV.NODE_ENV !== 'production' && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/?$/.test(origin)) return true;
   return false;
 };
