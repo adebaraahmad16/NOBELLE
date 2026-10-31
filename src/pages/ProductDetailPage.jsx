@@ -7,7 +7,7 @@ import { formatNaira } from '../utils/currency';
 export default function ProductDetailPage() {
   const {settings}=useStoreSettings();
   const { id } = useParams(); const [product, setProduct] = useState(null); const [variantId, setVariant] = useState(''); const [quantity, setQuantity] = useState(1); const [image, setImage] = useState(0); const [error, setError] = useState(''); const [message, setMessage] = useState(''); const [busy, setBusy] = useState(false); const { addVariant } = useCart();
-  useEffect(() => { setProduct(null); api(`/products/${encodeURIComponent(id)}`).then(p => setProduct(normalizeProduct(p))).catch(e => setError(e.message)); }, [id]);
+  useEffect(() => { let live=true;const load=()=>{api(`/products/${encodeURIComponent(id)}`).then(p=>{if(live){setProduct(normalizeProduct(p));setImage(0);setError('');}}).catch(e=>{if(live){setProduct(null);setError(e.message);}});};load();window.addEventListener('nobelle-data-changed',load);return()=>{live=false;window.removeEventListener('nobelle-data-changed',load);}; }, [id]);
   const run = async work => { setBusy(true); setError(''); setMessage(''); try { await work(); } catch(e) { setError(e.message); } finally { setBusy(false); } };
   const chosen = product?.variants.find(v => v.id === variantId);
   return <section className="container-custom section-padding">{error && <p role="alert" className="text-red-700 mb-4">{error} <Link to="/account">Sign in</Link></p>}{message && <p role="status">{message}</p>}{!product ? <p>{error ? 'Unable to load this product.' : 'Loading product…'}</p> : <div className="grid md:grid-cols-2 gap-8">

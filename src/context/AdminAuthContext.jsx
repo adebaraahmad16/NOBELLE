@@ -9,7 +9,7 @@ export function AdminAuthProvider({ children }) {
 
   const [loading, setLoading] = useState(true);
 
-  // Re-verify session against the backend on mount if a token exists
+  // Supabase restores its session; roles are always checked in the database.
   useEffect(() => {
 
     let cancelled = false;
@@ -32,8 +32,11 @@ export function AdminAuthProvider({ children }) {
 
   useEffect(() => {
     const expired = e => { if (e.detail === 'admin') { clearSession(); setIsAuthenticated(false); setAdmin(null); } };
+    const changed = () => { adminAuthApi.getMe().then(me=>{setAdmin(me);setIsAuthenticated(true);}).catch(()=>{setAdmin(null);setIsAuthenticated(false);}); };
     window.addEventListener('nobelle-session-expired', expired);
-    return () => window.removeEventListener('nobelle-session-expired', expired);
+    window.addEventListener('nobelle-session-changed', changed);
+    window.addEventListener('focus', changed);
+    return () => {window.removeEventListener('nobelle-session-expired', expired);window.removeEventListener('nobelle-session-changed', changed);window.removeEventListener('focus', changed);};
   }, []);
 
   const login = async (email, password, remember = false) => {

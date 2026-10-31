@@ -3,14 +3,20 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api, normalizeProduct } from '../api/client';
 import ProductCard from '../components/ui/ProductCard';
+import { affectsTables } from '../lib/supabase-sync.js';
 export default function ShopPage() {
+  const [revision,setRevision]=useState(0);
+  useEffect(()=>{const update=e=>{if(affectsTables(e,['products','product_categories','product_collections','product_images','product_variants','inventory','discounts','product_reviews','product_collection_links']))setRevision(n=>n+1);};window.addEventListener('nobelle-data-changed',update);return()=>window.removeEventListener('nobelle-data-changed',update);},[]);
   const {settings}=useStoreSettings();
   const [params, setParams] = useSearchParams(); const [products, setProducts] = useState([]); const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true); const [error, setError] = useState(''); const [pagination, setPagination] = useState({}); const [search, setSearch] = useState(params.get('search') || '');
-  const latestParams = useRef(params); const updateParams = useRef(setParams); latestParams.current = params; updateParams.current = setParams;
+  const latestParams = useRef(params); const updateParams = useRef(setParams);
+  useEffect(()=>{latestParams.current=params;updateParams.current=setParams;},[params,setParams]);
   useEffect(() => { api('/categories').then(setCategories).catch(e => setError(e.message)); }, []);
   useEffect(() => { if(search === (latestParams.current.get('search') || '')) return; const timer = setTimeout(() => { updateParams.current(previous => { const next = new URLSearchParams(previous); if(search) next.set('search', search); else next.delete('search'); next.delete('page'); return next; }, { replace: true }); }, 350); return () => clearTimeout(timer); }, [search]);
-  useEffect(() => { let active = true; setLoading(true); setError(''); api(`/products?${params}`, { full: true }).then(result => { if(active) { setProducts(result.data.map(normalizeProduct)); setPagination(result.pagination || {}); } }).catch(e => { if(active) setError(e.message); }).finally(() => { if(active) setLoading(false); }); return () => { active = false; }; }, [params,settings?.products.outOfStockVisibility]);
+  // Reset request state when the selected catalogue query changes.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { let active = true; setLoading(true); setError(''); api(`/products?${params}`, { full: true }).then(result => { if(active) { setProducts(result.data.map(normalizeProduct)); setPagination(result.pagination || {}); } }).catch(e => { if(active) setError(e.message); }).finally(() => { if(active) setLoading(false); }); return () => { active = false; }; }, [params,revision,settings?.products.outOfStockVisibility]);
   const filter = (key, value) => setParams(previous => { const next = new URLSearchParams(previous); if(value) next.set(key, value); else next.delete(key); if(key !== 'page') next.delete('page'); return next; });
   return <section className="container-custom section-padding"><h1 className="font-serif text-3xl mb-6">Shop NOBELLE</h1>
     <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-8"><input aria-label="Search products" className="input-field" placeholder="Search" value={search} onChange={e => setSearch(e.target.value)} />

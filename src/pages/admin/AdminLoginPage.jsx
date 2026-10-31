@@ -10,7 +10,7 @@ import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, ShieldCheck, Loader2 
   - Left: deep burgundy brand panel with subtle tonal depth, wordmark,
     fine decorative linework (no fake photography or statistics).
   - Right: warm cream login panel matching the dashboard surfaces.
-  - Auth: real backend (POST /api/v1/admin/auth/login). No demo credentials.
+  - Supabase Auth with database-backed staff permissions.
 */
 
 const BURGUNDY = '#641F2D';

@@ -1,5 +1,6 @@
 
 import AccountPage from './pages/AccountPage';
+import { useSupabaseSync } from './hooks/useSupabaseSync';
 import AdminResourcePage from './pages/admin/AdminResourcePage';
 import AdminWorkspace from './components/admin/AdminWorkspace';
 import ProductEditorPage from './pages/admin/ProductEditorPage';
@@ -21,7 +22,7 @@ import { StoreSettingsProvider, useStoreSettings } from './context/StoreSettings
 import { CartProvider } from './context/CartContext';
 import { ProductProvider, useProducts } from './context/ProductContext';
 import { AdminAuthProvider, useAdminAuth } from './context/AdminAuthContext';
-import { AdminDataProvider } from './context/AdminDataContext';
+import { AdminDataProvider, useAdminData } from './context/AdminDataContext';
 
 import AdminLoginPage from './pages/admin/AdminLoginPage';
 import AdminForgotPasswordPage from './pages/admin/AdminForgotPasswordPage';
@@ -47,16 +48,18 @@ function ScrollToTop() {
 // Global Shop Wrapper
 function ShopLayout() {
   const { loading, error, reload } = useProducts();
-  const {settings, error:settingsError}=useStoreSettings();
+  const {settings, error:settingsError,reload:reloadSettings}=useStoreSettings();
+  const {error:contentError}=useAdminData();
   const location=useLocation();
   const maintenance=settings?.general.status==='MAINTENANCE' && !/^(\/account|\/contact|\/privacy-policy|\/terms|\/return-policy|\/shipping-policy|\/size-guide)/.test(location.pathname) && !location.search.includes('reference=');
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
+      {contentError&&<p role="alert" className="container-custom py-3 text-red-700">{contentError}</p>}
       {loading && <p role="status" className="container-custom py-3">Loading catalog?</p>}
       {error && <p role="alert" className="container-custom py-3 text-red-700">{error} <button className="underline" onClick={reload}>Retry</button></p>}
       <main className="flex-grow">
-        {maintenance?<section className="container-custom section-padding text-center"><h1 className="font-serif text-3xl mb-6">We will be back soon</h1><p>{settings.general.maintenanceMessage}</p></section>:settingsError&&!settings?<p role="alert" className="container-custom section-padding">{settingsError}</p>:settings?<Outlet />:<p role="status" className="container-custom section-padding">Loading store...</p>}
+        {maintenance?<section className="container-custom section-padding text-center"><h1 className="font-serif text-3xl mb-6">We will be back soon</h1><p>{settings.general.maintenanceMessage}</p></section>:settingsError&&!settings?<p role="alert" className="container-custom section-padding">{settingsError} <button className="underline" onClick={reloadSettings}>Retry</button></p>:settings?<Outlet />:<p role="status" className="container-custom section-padding">Loading store...</p>}
       </main>
       <Footer />
     </div>
@@ -65,11 +68,17 @@ function ShopLayout() {
 
 // Protected Admin Route
 function ProtectedAdminRoute({ children }) {
-  const { isAuthenticated, loading } = useAdminAuth();
+  const { isAuthenticated, loading,admin } = useAdminAuth();
+  const location=useLocation();
   if (loading) return <p className="p-8">Checking your session?</p>;
   if (!isAuthenticated) {
     return <Navigate to="/admin/login" replace />;
   }
+  const permissions=admin?.permissions||[];
+  if(location.pathname==='/admin'&&!permissions.includes('VIEW_ANALYTICS'))return <Navigate replace to={permissions.includes('VIEW_ORDERS')?'/admin/orders':permissions.includes('MANAGE_INVENTORY')?'/admin/inventory':permissions.includes('VIEW_PRODUCTS')?'/admin/products':'/admin/settings?tab=account'}/>;
+  const section=location.pathname.split('/')[2];
+  const permission={products:'VIEW_PRODUCTS',categories:'VIEW_PRODUCTS',collections:'VIEW_PRODUCTS',inventory:'MANAGE_INVENTORY','stock-history':'MANAGE_INVENTORY',orders:'VIEW_ORDERS',customers:'VIEW_CUSTOMERS',payments:'VIEW_PAYMENTS',coupons:'MANAGE_PROMOTIONS',discounts:'MANAGE_PROMOTIONS',reviews:'EDIT_PRODUCTS',returns:'VIEW_ORDERS',reports:'VIEW_ANALYTICS',website:'MANAGE_WEBSITE',banners:'MANAGE_WEBSITE','homepage-sections':'MANAGE_WEBSITE',about:'MANAGE_WEBSITE','contact-content':'MANAGE_WEBSITE',messages:'VIEW_CUSTOMERS',staff:'MANAGE_STAFF','delivery-zones':'MANAGE_SETTINGS'}[section];
+  if(permission&&!permissions.includes(permission))return <section className="container-custom section-padding"><h1>Access restricted</h1><p>Your role cannot access this section.</p><a href="/admin">Back to administration</a></section>;
   return children;
 }
 
@@ -112,9 +121,15 @@ const router = createBrowserRouter(createRoutesFromElements(<Route element={<><S
 
 </Route>));
 
+function SupabaseSyncNotice(){
+  const {settings}=useStoreSettings();
+  const error=useSupabaseSync(Boolean(settings));
+  return error?<p role="status" className="container-custom py-3 text-brand-red">{error}</p>:null;
+}
 function App() {
   return (
     <StoreSettingsProvider><AdminAuthProvider>
+      <SupabaseSyncNotice />
       <AdminDataProvider>
         <ProductProvider>
           <CartProvider>

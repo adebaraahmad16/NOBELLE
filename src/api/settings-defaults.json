@@ -1,0 +1,188 @@
+{
+  "general": {
+    "storeName": "NOBELLE",
+    "currency": "NGN",
+    "timezone": "Africa/Lagos",
+    "language": "en",
+    "dateFormat": "DD/MM/YYYY",
+    "status": "ACTIVE",
+    "maintenanceMessage": "We are refreshing the NOBELLE store. Please check back soon."
+  },
+  "store": {
+    "businessName": "NOBELLE",
+    "businessEmail": "",
+    "supportEmail": "",
+    "phone": "",
+    "whatsapp": "",
+    "address": "",
+    "city": "",
+    "state": "",
+    "country": "Nigeria",
+    "logoUrl": "",
+    "faviconUrl": "",
+    "instagram": "",
+    "facebook": "",
+    "tiktok": "",
+    "twitter": ""
+  },
+  "payments": {
+    "enabled": true,
+    "card": true,
+    "bankTransfer": true,
+    "mode": "TEST",
+    "checkoutLabel": "Pay with Paystack (test mode)"
+  },
+  "shipping": {
+    "defaultCountry": "Nigeria",
+    "freeDeliveryThreshold": null
+  },
+  "orders": {
+    "prefix": "NBL-",
+    "confirmation": "MANUAL",
+    "allowCancellation": true,
+    "cancellationPeriodMinutes": 30,
+    "returnPeriodDays": 14,
+    "refundRule": "RECEIVED_GOODS",
+    "invoicesEnabled": true,
+    "orderNotifications": true,
+    "stockDeduction": "PAYMENT"
+  },
+  "products": {
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL"
+    ],
+    "colours": [],
+    "lowStockThreshold": 5,
+    "lowStockNotifications": true,
+    "outOfStockVisibility": "SHOW",
+    "allowOutOfStockPurchases": false,
+    "automaticSku": false,
+    "reviewsEnabled": true
+  },
+  "notifications": {
+    "newOrder": {
+      "dashboard": true,
+      "email": false
+    },
+    "successfulPayment": {
+      "dashboard": true,
+      "email": false
+    },
+    "failedPayment": {
+      "dashboard": true,
+      "email": false
+    },
+    "cancelledOrder": {
+      "dashboard": true,
+      "email": false
+    },
+    "returnRequest": {
+      "dashboard": true,
+      "email": false
+    },
+    "refundRequest": {
+      "dashboard": true,
+      "email": false
+    },
+    "lowStock": {
+      "dashboard": true,
+      "email": false
+    },
+    "outOfStock": {
+      "dashboard": true,
+      "email": false
+    },
+    "newCustomer": {
+      "dashboard": true,
+      "email": false
+    },
+    "newProductReview": {
+      "dashboard": true,
+      "email": false
+    }
+  },
+  "website": {
+    "logoUrl": "",
+    "faviconUrl": "",
+    "announcementEnabled": false,
+    "announcementText": "",
+    "footerText": "Modern Nigerian fashion for the contemporary African woman.",
+    "copyrightText": "NOBELLE. All rights reserved.",
+    "seoTitle": "NOBELLE",
+    "seoDescription": "",
+    "socialImage": ""
+  },
+  "permissions": {
+    "roles": {
+      "SUPER_ADMIN": [
+        "VIEW_PRODUCTS",
+        "CREATE_PRODUCTS",
+        "EDIT_PRODUCTS",
+        "DELETE_PRODUCTS",
+        "MANAGE_INVENTORY",
+        "VIEW_ORDERS",
+        "UPDATE_ORDERS",
+        "CANCEL_ORDERS",
+        "PROCESS_REFUNDS",
+        "VIEW_CUSTOMERS",
+        "MANAGE_CUSTOMERS",
+        "MANAGE_PROMOTIONS",
+        "MANAGE_WEBSITE",
+        "VIEW_ANALYTICS",
+        "VIEW_PAYMENTS",
+        "MANAGE_SETTINGS",
+        "MANAGE_STAFF"
+      ],
+      "MANAGER": [
+        "VIEW_PRODUCTS",
+        "CREATE_PRODUCTS",
+        "EDIT_PRODUCTS",
+        "DELETE_PRODUCTS",
+        "MANAGE_INVENTORY",
+        "VIEW_ORDERS",
+        "UPDATE_ORDERS",
+        "CANCEL_ORDERS",
+        "PROCESS_REFUNDS",
+        "VIEW_CUSTOMERS",
+        "MANAGE_CUSTOMERS",
+        "MANAGE_PROMOTIONS",
+        "MANAGE_WEBSITE",
+        "VIEW_ANALYTICS",
+        "VIEW_PAYMENTS",
+        "MANAGE_SETTINGS"
+      ],
+      "ORDER_MANAGER": [
+        "VIEW_PRODUCTS",
+        "VIEW_ORDERS",
+        "UPDATE_ORDERS",
+        "CANCEL_ORDERS",
+        "VIEW_CUSTOMERS",
+        "VIEW_PAYMENTS"
+      ],
+      "INVENTORY_MANAGER": [
+        "VIEW_PRODUCTS",
+        "CREATE_PRODUCTS",
+        "EDIT_PRODUCTS",
+        "MANAGE_INVENTORY"
+      ],
+      "MARKETING_MANAGER": [
+        "VIEW_PRODUCTS",
+        "VIEW_CUSTOMERS",
+        "MANAGE_PROMOTIONS",
+        "MANAGE_WEBSITE",
+        "VIEW_ANALYTICS"
+      ],
+      "SUPPORT": [
+        "VIEW_PRODUCTS",
+        "VIEW_ORDERS",
+        "CANCEL_ORDERS",
+        "VIEW_CUSTOMERS"
+      ]
+    }
+  }
+}

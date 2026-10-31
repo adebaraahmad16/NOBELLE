@@ -6,7 +6,7 @@ import { adminAuthApi } from '../../utils/api';
 
 /*
   NOBELLE Admin — Forgot password screen.
-  Connects to POST /api/v1/admin/auth/forgot-password.
+  Sends recovery email through Supabase Auth.
   Never reveals whether a specific admin account exists.
 */
 

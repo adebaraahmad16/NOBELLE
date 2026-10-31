@@ -1,0 +1,4084 @@
+{
+  "activity_logs": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "adminId",
+        "type": "uuid",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "action",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "entity",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "entityId",
+        "type": "text",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "metadata",
+        "type": "jsonb",
+        "required": true,
+        "default_value": "'{}'::jsonb"
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "activity_logs_adminId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"adminId\") REFERENCES profiles(id)"
+      },
+      {
+        "name": "activity_logs_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "activity_logs_adminId_idx",
+        "definition": "CREATE INDEX \"activity_logs_adminId_idx\" ON public.activity_logs USING btree (\"adminId\")"
+      },
+      {
+        "name": "activity_logs_pkey",
+        "definition": "CREATE UNIQUE INDEX activity_logs_pkey ON public.activity_logs USING btree (id)"
+      }
+    ]
+  },
+  "admin_notifications": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "type",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "message",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "permission",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "linkUrl",
+        "type": "text",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "isRead",
+        "type": "boolean",
+        "required": true,
+        "default_value": "false"
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "admin_notifications_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "admin_notifications_pkey",
+        "definition": "CREATE UNIQUE INDEX admin_notifications_pkey ON public.admin_notifications USING btree (id)"
+      },
+      {
+        "name": "notifications_unread",
+        "definition": "CREATE INDEX notifications_unread ON public.admin_notifications USING btree (permission, \"createdAt\" DESC) WHERE (NOT \"isRead\")"
+      }
+    ]
+  },
+  "admin_roles": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "userId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "role",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "isActive",
+        "type": "boolean",
+        "required": true,
+        "default_value": "true"
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "admin_roles_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "admin_roles_role_check",
+        "type": "c",
+        "definition": "CHECK ((role = ANY (ARRAY['SUPER_ADMIN'::text, 'MANAGER'::text, 'ORDER_MANAGER'::text, 'INVENTORY_MANAGER'::text, 'MARKETING_MANAGER'::text, 'SUPPORT'::text])))"
+      },
+      {
+        "name": "admin_roles_userId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"userId\") REFERENCES profiles(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "admin_roles_userId_key",
+        "type": "u",
+        "definition": "UNIQUE (\"userId\")"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "admin_roles_pkey",
+        "definition": "CREATE UNIQUE INDEX admin_roles_pkey ON public.admin_roles USING btree (id)"
+      },
+      {
+        "name": "admin_roles_userId_idx",
+        "definition": "CREATE INDEX \"admin_roles_userId_idx\" ON public.admin_roles USING btree (\"userId\")"
+      },
+      {
+        "name": "admin_roles_userId_key",
+        "definition": "CREATE UNIQUE INDEX \"admin_roles_userId_key\" ON public.admin_roles USING btree (\"userId\")"
+      }
+    ]
+  },
+  "banners": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "subtitle",
+        "type": "text",
+        "required": false,
+        "default_value": "''::text"
+      },
+      {
+        "name": "imageUrl",
+        "type": "text",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "linkUrl",
+        "type": "text",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "buttonText",
+        "type": "text",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "sortOrder",
+        "type": "integer",
+        "required": true,
+        "default_value": "0"
+      },
+      {
+        "name": "isActive",
+        "type": "boolean",
+        "required": true,
+        "default_value": "true"
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "banners_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "banners_pkey",
+        "definition": "CREATE UNIQUE INDEX banners_pkey ON public.banners USING btree (id)"
+      }
+    ]
+  },
+  "cart_items": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "cartId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "variantId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "quantity",
+        "type": "integer",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "cart_items_cartId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"cartId\") REFERENCES carts(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "cart_items_cartId_variantId_key",
+        "type": "u",
+        "definition": "UNIQUE (\"cartId\", \"variantId\")"
+      },
+      {
+        "name": "cart_items_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "cart_items_quantity_check",
+        "type": "c",
+        "definition": "CHECK (((quantity >= 1) AND (quantity <= 100)))"
+      },
+      {
+        "name": "cart_items_variantId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"variantId\") REFERENCES product_variants(id)"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "cart_items_cartId_idx",
+        "definition": "CREATE INDEX \"cart_items_cartId_idx\" ON public.cart_items USING btree (\"cartId\")"
+      },
+      {
+        "name": "cart_items_cartId_variantId_key",
+        "definition": "CREATE UNIQUE INDEX \"cart_items_cartId_variantId_key\" ON public.cart_items USING btree (\"cartId\", \"variantId\")"
+      },
+      {
+        "name": "cart_items_pkey",
+        "definition": "CREATE UNIQUE INDEX cart_items_pkey ON public.cart_items USING btree (id)"
+      },
+      {
+        "name": "cart_items_variantId_idx",
+        "definition": "CREATE INDEX \"cart_items_variantId_idx\" ON public.cart_items USING btree (\"variantId\")"
+      }
+    ]
+  },
+  "carts": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "customerId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "carts_customerId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"customerId\") REFERENCES profiles(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "carts_customerId_key",
+        "type": "u",
+        "definition": "UNIQUE (\"customerId\")"
+      },
+      {
+        "name": "carts_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "carts_customerId_idx",
+        "definition": "CREATE INDEX \"carts_customerId_idx\" ON public.carts USING btree (\"customerId\")"
+      },
+      {
+        "name": "carts_customerId_key",
+        "definition": "CREATE UNIQUE INDEX \"carts_customerId_key\" ON public.carts USING btree (\"customerId\")"
+      },
+      {
+        "name": "carts_pkey",
+        "definition": "CREATE UNIQUE INDEX carts_pkey ON public.carts USING btree (id)"
+      }
+    ]
+  },
+  "contact_messages": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "email",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "subject",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "message",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "isRead",
+        "type": "boolean",
+        "required": true,
+        "default_value": "false"
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": true,
+        "default_value": "'NEW'::text"
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "contact_messages_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "contact_messages_status_check",
+        "type": "c",
+        "definition": "CHECK ((status = ANY (ARRAY['NEW'::text, 'IN_PROGRESS'::text, 'RESOLVED'::text, 'ARCHIVED'::text])))"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "contact_messages_pkey",
+        "definition": "CREATE UNIQUE INDEX contact_messages_pkey ON public.contact_messages USING btree (id)"
+      }
+    ]
+  },
+  "coupon_usage": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "couponId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "customerId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "orderId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "coupon_usage_couponId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"couponId\") REFERENCES coupons(id)"
+      },
+      {
+        "name": "coupon_usage_customerId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"customerId\") REFERENCES profiles(id)"
+      },
+      {
+        "name": "coupon_usage_orderId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"orderId\") REFERENCES orders(id)"
+      },
+      {
+        "name": "coupon_usage_orderId_key",
+        "type": "u",
+        "definition": "UNIQUE (\"orderId\")"
+      },
+      {
+        "name": "coupon_usage_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "coupon_usage_couponId_idx",
+        "definition": "CREATE INDEX \"coupon_usage_couponId_idx\" ON public.coupon_usage USING btree (\"couponId\")"
+      },
+      {
+        "name": "coupon_usage_customerId_idx",
+        "definition": "CREATE INDEX \"coupon_usage_customerId_idx\" ON public.coupon_usage USING btree (\"customerId\")"
+      },
+      {
+        "name": "coupon_usage_orderId_idx",
+        "definition": "CREATE INDEX \"coupon_usage_orderId_idx\" ON public.coupon_usage USING btree (\"orderId\")"
+      },
+      {
+        "name": "coupon_usage_orderId_key",
+        "definition": "CREATE UNIQUE INDEX \"coupon_usage_orderId_key\" ON public.coupon_usage USING btree (\"orderId\")"
+      },
+      {
+        "name": "coupon_usage_pkey",
+        "definition": "CREATE UNIQUE INDEX coupon_usage_pkey ON public.coupon_usage USING btree (id)"
+      }
+    ]
+  },
+  "coupons": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "code",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "discountType",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "value",
+        "type": "numeric(14,2)",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "minSpend",
+        "type": "numeric(14,2)",
+        "required": true,
+        "default_value": "0"
+      },
+      {
+        "name": "maxDiscount",
+        "type": "numeric(14,2)",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "usageLimit",
+        "type": "integer",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "perCustomerLimit",
+        "type": "integer",
+        "required": true,
+        "default_value": "1"
+      },
+      {
+        "name": "startsAt",
+        "type": "timestamp with time zone",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "expiresAt",
+        "type": "timestamp with time zone",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "isActive",
+        "type": "boolean",
+        "required": true,
+        "default_value": "true"
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "coupons_check",
+        "type": "c",
+        "definition": "CHECK (((\"discountType\" <> 'PERCENTAGE'::text) OR (value <= (100)::numeric)))"
+      },
+      {
+        "name": "coupons_code_check",
+        "type": "c",
+        "definition": "CHECK ((code = upper(code)))"
+      },
+      {
+        "name": "coupons_code_key",
+        "type": "u",
+        "definition": "UNIQUE (code)"
+      },
+      {
+        "name": "coupons_discountType_check",
+        "type": "c",
+        "definition": "CHECK ((\"discountType\" = ANY (ARRAY['PERCENTAGE'::text, 'FIXED_AMOUNT'::text])))"
+      },
+      {
+        "name": "coupons_maxDiscount_check",
+        "type": "c",
+        "definition": "CHECK ((\"maxDiscount\" >= (0)::numeric))"
+      },
+      {
+        "name": "coupons_minSpend_check",
+        "type": "c",
+        "definition": "CHECK ((\"minSpend\" >= (0)::numeric))"
+      },
+      {
+        "name": "coupons_perCustomerLimit_check",
+        "type": "c",
+        "definition": "CHECK ((\"perCustomerLimit\" > 0))"
+      },
+      {
+        "name": "coupons_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "coupons_usageLimit_check",
+        "type": "c",
+        "definition": "CHECK ((\"usageLimit\" > 0))"
+      },
+      {
+        "name": "coupons_value_check",
+        "type": "c",
+        "definition": "CHECK ((value > (0)::numeric))"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "coupons_code_key",
+        "definition": "CREATE UNIQUE INDEX coupons_code_key ON public.coupons USING btree (code)"
+      },
+      {
+        "name": "coupons_pkey",
+        "definition": "CREATE UNIQUE INDEX coupons_pkey ON public.coupons USING btree (id)"
+      }
+    ]
+  },
+  "customer_addresses": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "customerId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "recipient",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "phoneNumber",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "street",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "city",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "state",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "postalCode",
+        "type": "text",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "country",
+        "type": "text",
+        "required": true,
+        "default_value": "'Nigeria'::text"
+      },
+      {
+        "name": "isDefault",
+        "type": "boolean",
+        "required": true,
+        "default_value": "false"
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "customer_addresses_customerId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"customerId\") REFERENCES profiles(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "customer_addresses_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "customer_addresses_customerId_idx",
+        "definition": "CREATE INDEX \"customer_addresses_customerId_idx\" ON public.customer_addresses USING btree (\"customerId\")"
+      },
+      {
+        "name": "customer_addresses_pkey",
+        "definition": "CREATE UNIQUE INDEX customer_addresses_pkey ON public.customer_addresses USING btree (id)"
+      },
+      {
+        "name": "one_default_address",
+        "definition": "CREATE UNIQUE INDEX one_default_address ON public.customer_addresses USING btree (\"customerId\") WHERE \"isDefault\""
+      }
+    ]
+  },
+  "discounts": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "productId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "discountType",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "value",
+        "type": "numeric(14,2)",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "startsAt",
+        "type": "timestamp with time zone",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "expiresAt",
+        "type": "timestamp with time zone",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "isActive",
+        "type": "boolean",
+        "required": true,
+        "default_value": "true"
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "discounts_check",
+        "type": "c",
+        "definition": "CHECK (((\"discountType\" <> 'PERCENTAGE'::text) OR (value <= (100)::numeric)))"
+      },
+      {
+        "name": "discounts_discountType_check",
+        "type": "c",
+        "definition": "CHECK ((\"discountType\" = ANY (ARRAY['PERCENTAGE'::text, 'FIXED_AMOUNT'::text])))"
+      },
+      {
+        "name": "discounts_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "discounts_productId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"productId\") REFERENCES products(id)"
+      },
+      {
+        "name": "discounts_value_check",
+        "type": "c",
+        "definition": "CHECK ((value > (0)::numeric))"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "discounts_pkey",
+        "definition": "CREATE UNIQUE INDEX discounts_pkey ON public.discounts USING btree (id)"
+      },
+      {
+        "name": "discounts_productId_idx",
+        "definition": "CREATE INDEX \"discounts_productId_idx\" ON public.discounts USING btree (\"productId\")"
+      }
+    ]
+  },
+  "email_outbox": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "recipient",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "subject",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "body",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "linkUrl",
+        "type": "text",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": true,
+        "default_value": "'PENDING'::text"
+      },
+      {
+        "name": "attempts",
+        "type": "integer",
+        "required": true,
+        "default_value": "0"
+      },
+      {
+        "name": "firstAttemptAt",
+        "type": "timestamp with time zone",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "lockedUntil",
+        "type": "timestamp with time zone",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "notBefore",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "providerId",
+        "type": "text",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "lastError",
+        "type": "text",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "email_outbox_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "email_outbox_status_check",
+        "type": "c",
+        "definition": "CHECK ((status = ANY (ARRAY['PENDING'::text, 'PROCESSING'::text, 'SENT'::text, 'FAILED'::text])))"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "email_outbox_pending",
+        "definition": "CREATE INDEX email_outbox_pending ON public.email_outbox USING btree (\"notBefore\") WHERE (status = ANY (ARRAY['PENDING'::text, 'PROCESSING'::text]))"
+      },
+      {
+        "name": "email_outbox_pkey",
+        "definition": "CREATE UNIQUE INDEX email_outbox_pkey ON public.email_outbox USING btree (id)"
+      }
+    ]
+  },
+  "featured_products": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "productId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "sortOrder",
+        "type": "integer",
+        "required": true,
+        "default_value": "0"
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "featured_products_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "featured_products_productId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"productId\") REFERENCES products(id)"
+      },
+      {
+        "name": "featured_products_productId_key",
+        "type": "u",
+        "definition": "UNIQUE (\"productId\")"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "featured_products_pkey",
+        "definition": "CREATE UNIQUE INDEX featured_products_pkey ON public.featured_products USING btree (id)"
+      },
+      {
+        "name": "featured_products_productId_idx",
+        "definition": "CREATE INDEX \"featured_products_productId_idx\" ON public.featured_products USING btree (\"productId\")"
+      },
+      {
+        "name": "featured_products_productId_key",
+        "definition": "CREATE UNIQUE INDEX \"featured_products_productId_key\" ON public.featured_products USING btree (\"productId\")"
+      }
+    ]
+  },
+  "homepage_sections": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "heading",
+        "type": "text",
+        "required": false,
+        "default_value": "''::text"
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "required": false,
+        "default_value": "''::text"
+      },
+      {
+        "name": "imageUrl",
+        "type": "text",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "linkUrl",
+        "type": "text",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "sortOrder",
+        "type": "integer",
+        "required": true,
+        "default_value": "0"
+      },
+      {
+        "name": "isActive",
+        "type": "boolean",
+        "required": true,
+        "default_value": "true"
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "homepage_sections_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "homepage_sections_pkey",
+        "definition": "CREATE UNIQUE INDEX homepage_sections_pkey ON public.homepage_sections USING btree (id)"
+      }
+    ]
+  },
+  "inventory": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "variantId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "quantity",
+        "type": "integer",
+        "required": true,
+        "default_value": "0"
+      },
+      {
+        "name": "reserved",
+        "type": "integer",
+        "required": true,
+        "default_value": "0"
+      },
+      {
+        "name": "lowStockThreshold",
+        "type": "integer",
+        "required": true,
+        "default_value": "5"
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "inventory_check",
+        "type": "c",
+        "definition": "CHECK (((reserved >= 0) AND (reserved <= quantity)))"
+      },
+      {
+        "name": "inventory_lowStockThreshold_check",
+        "type": "c",
+        "definition": "CHECK ((\"lowStockThreshold\" >= 0))"
+      },
+      {
+        "name": "inventory_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "inventory_quantity_check",
+        "type": "c",
+        "definition": "CHECK ((quantity >= 0))"
+      },
+      {
+        "name": "inventory_variantId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"variantId\") REFERENCES product_variants(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "inventory_variantId_key",
+        "type": "u",
+        "definition": "UNIQUE (\"variantId\")"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "inventory_pkey",
+        "definition": "CREATE UNIQUE INDEX inventory_pkey ON public.inventory USING btree (id)"
+      },
+      {
+        "name": "inventory_variantId_idx",
+        "definition": "CREATE INDEX \"inventory_variantId_idx\" ON public.inventory USING btree (\"variantId\")"
+      },
+      {
+        "name": "inventory_variantId_key",
+        "definition": "CREATE UNIQUE INDEX \"inventory_variantId_key\" ON public.inventory USING btree (\"variantId\")"
+      }
+    ]
+  },
+  "inventory_movements": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "variantId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "delta",
+        "type": "integer",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "reservedDelta",
+        "type": "integer",
+        "required": true,
+        "default_value": "0"
+      },
+      {
+        "name": "type",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "reason",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "actorId",
+        "type": "uuid",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "orderId",
+        "type": "uuid",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "previousQty",
+        "type": "integer",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "newQty",
+        "type": "integer",
+        "required": false,
+        "default_value": null
+      }
+    ],
+    "constraints": [
+      {
+        "name": "inventory_movements_actorId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"actorId\") REFERENCES profiles(id)"
+      },
+      {
+        "name": "inventory_movements_orderId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"orderId\") REFERENCES orders(id)"
+      },
+      {
+        "name": "inventory_movements_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "inventory_movements_variantId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"variantId\") REFERENCES product_variants(id)"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "inventory_movements_actorId_idx",
+        "definition": "CREATE INDEX \"inventory_movements_actorId_idx\" ON public.inventory_movements USING btree (\"actorId\")"
+      },
+      {
+        "name": "inventory_movements_orderId_idx",
+        "definition": "CREATE INDEX \"inventory_movements_orderId_idx\" ON public.inventory_movements USING btree (\"orderId\")"
+      },
+      {
+        "name": "inventory_movements_pkey",
+        "definition": "CREATE UNIQUE INDEX inventory_movements_pkey ON public.inventory_movements USING btree (id)"
+      },
+      {
+        "name": "inventory_movements_variantId_idx",
+        "definition": "CREATE INDEX \"inventory_movements_variantId_idx\" ON public.inventory_movements USING btree (\"variantId\")"
+      }
+    ]
+  },
+  "newsletter_subscribers": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "email",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "newsletter_subscribers_email_key",
+        "type": "u",
+        "definition": "UNIQUE (email)"
+      },
+      {
+        "name": "newsletter_subscribers_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "newsletter_subscribers_email_key",
+        "definition": "CREATE UNIQUE INDEX newsletter_subscribers_email_key ON public.newsletter_subscribers USING btree (email)"
+      },
+      {
+        "name": "newsletter_subscribers_pkey",
+        "definition": "CREATE UNIQUE INDEX newsletter_subscribers_pkey ON public.newsletter_subscribers USING btree (id)"
+      }
+    ]
+  },
+  "notifications": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "customerId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "message",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "linkUrl",
+        "type": "text",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "isRead",
+        "type": "boolean",
+        "required": true,
+        "default_value": "false"
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "notifications_customerId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"customerId\") REFERENCES profiles(id)"
+      },
+      {
+        "name": "notifications_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "notifications_customerId_idx",
+        "definition": "CREATE INDEX \"notifications_customerId_idx\" ON public.notifications USING btree (\"customerId\")"
+      },
+      {
+        "name": "notifications_pkey",
+        "definition": "CREATE UNIQUE INDEX notifications_pkey ON public.notifications USING btree (id)"
+      }
+    ]
+  },
+  "order_items": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "orderId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "productId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "variantId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "productName",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "sku",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "size",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "color",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "quantity",
+        "type": "integer",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "unitPrice",
+        "type": "numeric(14,2)",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "totalPrice",
+        "type": "numeric(14,2)",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "order_items_check",
+        "type": "c",
+        "definition": "CHECK ((\"totalPrice\" = (\"unitPrice\" * (quantity)::numeric)))"
+      },
+      {
+        "name": "order_items_orderId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"orderId\") REFERENCES orders(id)"
+      },
+      {
+        "name": "order_items_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "order_items_productId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"productId\") REFERENCES products(id)"
+      },
+      {
+        "name": "order_items_quantity_check",
+        "type": "c",
+        "definition": "CHECK ((quantity > 0))"
+      },
+      {
+        "name": "order_items_unitPrice_check",
+        "type": "c",
+        "definition": "CHECK ((\"unitPrice\" >= (0)::numeric))"
+      },
+      {
+        "name": "order_items_variantId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"variantId\") REFERENCES product_variants(id)"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "order_items_orderId_idx",
+        "definition": "CREATE INDEX \"order_items_orderId_idx\" ON public.order_items USING btree (\"orderId\")"
+      },
+      {
+        "name": "order_items_pkey",
+        "definition": "CREATE UNIQUE INDEX order_items_pkey ON public.order_items USING btree (id)"
+      },
+      {
+        "name": "order_items_productId_idx",
+        "definition": "CREATE INDEX \"order_items_productId_idx\" ON public.order_items USING btree (\"productId\")"
+      },
+      {
+        "name": "order_items_variantId_idx",
+        "definition": "CREATE INDEX \"order_items_variantId_idx\" ON public.order_items USING btree (\"variantId\")"
+      }
+    ]
+  },
+  "order_status_history": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "orderId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "note",
+        "type": "text",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "actorId",
+        "type": "uuid",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "order_status_history_actorId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"actorId\") REFERENCES profiles(id)"
+      },
+      {
+        "name": "order_status_history_orderId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"orderId\") REFERENCES orders(id)"
+      },
+      {
+        "name": "order_status_history_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "order_status_history_actorId_idx",
+        "definition": "CREATE INDEX \"order_status_history_actorId_idx\" ON public.order_status_history USING btree (\"actorId\")"
+      },
+      {
+        "name": "order_status_history_orderId_idx",
+        "definition": "CREATE INDEX \"order_status_history_orderId_idx\" ON public.order_status_history USING btree (\"orderId\")"
+      },
+      {
+        "name": "order_status_history_pkey",
+        "definition": "CREATE UNIQUE INDEX order_status_history_pkey ON public.order_status_history USING btree (id)"
+      }
+    ]
+  },
+  "orders": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "customerId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "orderNumber",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "idempotencyKey",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": true,
+        "default_value": "'PENDING'::text"
+      },
+      {
+        "name": "paymentStatus",
+        "type": "text",
+        "required": true,
+        "default_value": "'PENDING'::text"
+      },
+      {
+        "name": "subtotal",
+        "type": "numeric(14,2)",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "discountTotal",
+        "type": "numeric(14,2)",
+        "required": true,
+        "default_value": "0"
+      },
+      {
+        "name": "deliveryFee",
+        "type": "numeric(14,2)",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "totalAmount",
+        "type": "numeric(14,2)",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "currency",
+        "type": "text",
+        "required": true,
+        "default_value": "'NGN'::text"
+      },
+      {
+        "name": "deliveryZoneId",
+        "type": "uuid",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "stockCommitted",
+        "type": "boolean",
+        "required": true,
+        "default_value": "false"
+      },
+      {
+        "name": "settingsSnapshot",
+        "type": "jsonb",
+        "required": true,
+        "default_value": "'{}'::jsonb"
+      },
+      {
+        "name": "expiresAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "paidAt",
+        "type": "timestamp with time zone",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "deliveredAt",
+        "type": "timestamp with time zone",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "orders_check",
+        "type": "c",
+        "definition": "CHECK ((\"totalAmount\" = ((subtotal - \"discountTotal\") + \"deliveryFee\")))"
+      },
+      {
+        "name": "orders_customerId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"customerId\") REFERENCES profiles(id)"
+      },
+      {
+        "name": "orders_customerId_idempotencyKey_key",
+        "type": "u",
+        "definition": "UNIQUE (\"customerId\", \"idempotencyKey\")"
+      },
+      {
+        "name": "orders_deliveryFee_check",
+        "type": "c",
+        "definition": "CHECK ((\"deliveryFee\" >= (0)::numeric))"
+      },
+      {
+        "name": "orders_deliveryZoneId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"deliveryZoneId\") REFERENCES shipping_zones(id)"
+      },
+      {
+        "name": "orders_discountTotal_check",
+        "type": "c",
+        "definition": "CHECK ((\"discountTotal\" >= (0)::numeric))"
+      },
+      {
+        "name": "orders_orderNumber_key",
+        "type": "u",
+        "definition": "UNIQUE (\"orderNumber\")"
+      },
+      {
+        "name": "orders_paymentStatus_check",
+        "type": "c",
+        "definition": "CHECK ((\"paymentStatus\" = ANY (ARRAY['PENDING'::text, 'SUCCESS'::text, 'FAILED'::text, 'REFUNDED'::text])))"
+      },
+      {
+        "name": "orders_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "orders_status_check",
+        "type": "c",
+        "definition": "CHECK ((status = ANY (ARRAY['PENDING'::text, 'CONFIRMED'::text, 'PROCESSING'::text, 'SHIPPED'::text, 'DELIVERED'::text, 'CANCELLED'::text, 'REFUNDED'::text])))"
+      },
+      {
+        "name": "orders_subtotal_check",
+        "type": "c",
+        "definition": "CHECK ((subtotal >= (0)::numeric))"
+      },
+      {
+        "name": "orders_totalAmount_check",
+        "type": "c",
+        "definition": "CHECK ((\"totalAmount\" >= (0)::numeric))"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "orders_customerId_idempotencyKey_key",
+        "definition": "CREATE UNIQUE INDEX \"orders_customerId_idempotencyKey_key\" ON public.orders USING btree (\"customerId\", \"idempotencyKey\")"
+      },
+      {
+        "name": "orders_customerId_idx",
+        "definition": "CREATE INDEX \"orders_customerId_idx\" ON public.orders USING btree (\"customerId\")"
+      },
+      {
+        "name": "orders_deliveryZoneId_idx",
+        "definition": "CREATE INDEX \"orders_deliveryZoneId_idx\" ON public.orders USING btree (\"deliveryZoneId\")"
+      },
+      {
+        "name": "orders_expiry",
+        "definition": "CREATE INDEX orders_expiry ON public.orders USING btree (\"expiresAt\") WHERE (status = 'PENDING'::text)"
+      },
+      {
+        "name": "orders_orderNumber_key",
+        "definition": "CREATE UNIQUE INDEX \"orders_orderNumber_key\" ON public.orders USING btree (\"orderNumber\")"
+      },
+      {
+        "name": "orders_pkey",
+        "definition": "CREATE UNIQUE INDEX orders_pkey ON public.orders USING btree (id)"
+      },
+      {
+        "name": "orders_status_created",
+        "definition": "CREATE INDEX orders_status_created ON public.orders USING btree (status, \"createdAt\" DESC)"
+      }
+    ]
+  },
+  "payment_transactions": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "paymentId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "eventId",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "amount",
+        "type": "numeric(14,2)",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "payment_transactions_eventId_key",
+        "type": "u",
+        "definition": "UNIQUE (\"eventId\")"
+      },
+      {
+        "name": "payment_transactions_paymentId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"paymentId\") REFERENCES payments(id)"
+      },
+      {
+        "name": "payment_transactions_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "payment_transactions_eventId_key",
+        "definition": "CREATE UNIQUE INDEX \"payment_transactions_eventId_key\" ON public.payment_transactions USING btree (\"eventId\")"
+      },
+      {
+        "name": "payment_transactions_paymentId_idx",
+        "definition": "CREATE INDEX \"payment_transactions_paymentId_idx\" ON public.payment_transactions USING btree (\"paymentId\")"
+      },
+      {
+        "name": "payment_transactions_pkey",
+        "definition": "CREATE UNIQUE INDEX payment_transactions_pkey ON public.payment_transactions USING btree (id)"
+      }
+    ]
+  },
+  "payments": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "orderId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "reference",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "amount",
+        "type": "numeric(14,2)",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "currency",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": true,
+        "default_value": "'PENDING'::text"
+      },
+      {
+        "name": "gatewayId",
+        "type": "text",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "mode",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "authorizationUrl",
+        "type": "text",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "payments_amount_check",
+        "type": "c",
+        "definition": "CHECK ((amount > (0)::numeric))"
+      },
+      {
+        "name": "payments_mode_check",
+        "type": "c",
+        "definition": "CHECK ((mode = ANY (ARRAY['TEST'::text, 'LIVE'::text])))"
+      },
+      {
+        "name": "payments_orderId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"orderId\") REFERENCES orders(id)"
+      },
+      {
+        "name": "payments_orderId_key",
+        "type": "u",
+        "definition": "UNIQUE (\"orderId\")"
+      },
+      {
+        "name": "payments_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "payments_reference_key",
+        "type": "u",
+        "definition": "UNIQUE (reference)"
+      },
+      {
+        "name": "payments_status_check",
+        "type": "c",
+        "definition": "CHECK ((status = ANY (ARRAY['PENDING'::text, 'SUCCESS'::text, 'FAILED'::text, 'REFUNDED'::text])))"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "payments_orderId_idx",
+        "definition": "CREATE INDEX \"payments_orderId_idx\" ON public.payments USING btree (\"orderId\")"
+      },
+      {
+        "name": "payments_orderId_key",
+        "definition": "CREATE UNIQUE INDEX \"payments_orderId_key\" ON public.payments USING btree (\"orderId\")"
+      },
+      {
+        "name": "payments_pkey",
+        "definition": "CREATE UNIQUE INDEX payments_pkey ON public.payments USING btree (id)"
+      },
+      {
+        "name": "payments_reference_key",
+        "definition": "CREATE UNIQUE INDEX payments_reference_key ON public.payments USING btree (reference)"
+      }
+    ]
+  },
+  "policies": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "content",
+        "type": "text",
+        "required": true,
+        "default_value": "''::text"
+      },
+      {
+        "name": "published",
+        "type": "jsonb",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": true,
+        "default_value": "'DRAFT'::text"
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "policies_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "policies_status_check",
+        "type": "c",
+        "definition": "CHECK ((status = ANY (ARRAY['DRAFT'::text, 'PUBLISHED'::text])))"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "policies_pkey",
+        "definition": "CREATE UNIQUE INDEX policies_pkey ON public.policies USING btree (id)"
+      }
+    ]
+  },
+  "product_categories": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "slug",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "required": false,
+        "default_value": "''::text"
+      },
+      {
+        "name": "imageUrl",
+        "type": "text",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "isActive",
+        "type": "boolean",
+        "required": true,
+        "default_value": "true"
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "product_categories_name_key",
+        "type": "u",
+        "definition": "UNIQUE (name)"
+      },
+      {
+        "name": "product_categories_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "product_categories_slug_key",
+        "type": "u",
+        "definition": "UNIQUE (slug)"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "product_categories_name_key",
+        "definition": "CREATE UNIQUE INDEX product_categories_name_key ON public.product_categories USING btree (name)"
+      },
+      {
+        "name": "product_categories_pkey",
+        "definition": "CREATE UNIQUE INDEX product_categories_pkey ON public.product_categories USING btree (id)"
+      },
+      {
+        "name": "product_categories_slug_key",
+        "definition": "CREATE UNIQUE INDEX product_categories_slug_key ON public.product_categories USING btree (slug)"
+      },
+      {
+        "name": "product_categories_visibility_created",
+        "definition": "CREATE INDEX product_categories_visibility_created ON public.product_categories USING btree (\"isActive\", \"createdAt\" DESC)"
+      }
+    ]
+  },
+  "product_collection_links": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "productId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "collectionId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "product_collection_links_collectionId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"collectionId\") REFERENCES product_collections(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "product_collection_links_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "product_collection_links_productId_collectionId_key",
+        "type": "u",
+        "definition": "UNIQUE (\"productId\", \"collectionId\")"
+      },
+      {
+        "name": "product_collection_links_productId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"productId\") REFERENCES products(id) ON DELETE CASCADE"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "product_collection_links_collectionId_idx",
+        "definition": "CREATE INDEX \"product_collection_links_collectionId_idx\" ON public.product_collection_links USING btree (\"collectionId\")"
+      },
+      {
+        "name": "product_collection_links_pkey",
+        "definition": "CREATE UNIQUE INDEX product_collection_links_pkey ON public.product_collection_links USING btree (id)"
+      },
+      {
+        "name": "product_collection_links_productId_collectionId_key",
+        "definition": "CREATE UNIQUE INDEX \"product_collection_links_productId_collectionId_key\" ON public.product_collection_links USING btree (\"productId\", \"collectionId\")"
+      },
+      {
+        "name": "product_collection_links_productId_idx",
+        "definition": "CREATE INDEX \"product_collection_links_productId_idx\" ON public.product_collection_links USING btree (\"productId\")"
+      }
+    ]
+  },
+  "product_collections": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "slug",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "required": false,
+        "default_value": "''::text"
+      },
+      {
+        "name": "imageUrl",
+        "type": "text",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "isActive",
+        "type": "boolean",
+        "required": true,
+        "default_value": "true"
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "product_collections_name_key",
+        "type": "u",
+        "definition": "UNIQUE (name)"
+      },
+      {
+        "name": "product_collections_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "product_collections_slug_key",
+        "type": "u",
+        "definition": "UNIQUE (slug)"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "product_collections_name_key",
+        "definition": "CREATE UNIQUE INDEX product_collections_name_key ON public.product_collections USING btree (name)"
+      },
+      {
+        "name": "product_collections_pkey",
+        "definition": "CREATE UNIQUE INDEX product_collections_pkey ON public.product_collections USING btree (id)"
+      },
+      {
+        "name": "product_collections_slug_key",
+        "definition": "CREATE UNIQUE INDEX product_collections_slug_key ON public.product_collections USING btree (slug)"
+      }
+    ]
+  },
+  "product_colours": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "hex",
+        "type": "text",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "active",
+        "type": "boolean",
+        "required": true,
+        "default_value": "true"
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "product_colours_hex_check",
+        "type": "c",
+        "definition": "CHECK ((hex ~ '^#[0-9a-fA-F]{6}$'::text))"
+      },
+      {
+        "name": "product_colours_name_key",
+        "type": "u",
+        "definition": "UNIQUE (name)"
+      },
+      {
+        "name": "product_colours_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "product_colours_name_key",
+        "definition": "CREATE UNIQUE INDEX product_colours_name_key ON public.product_colours USING btree (name)"
+      },
+      {
+        "name": "product_colours_pkey",
+        "definition": "CREATE UNIQUE INDEX product_colours_pkey ON public.product_colours USING btree (id)"
+      }
+    ]
+  },
+  "product_images": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "productId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "url",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "path",
+        "type": "text",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "sortOrder",
+        "type": "integer",
+        "required": true,
+        "default_value": "0"
+      },
+      {
+        "name": "isPrimary",
+        "type": "boolean",
+        "required": true,
+        "default_value": "false"
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "product_images_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "product_images_productId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"productId\") REFERENCES products(id) ON DELETE CASCADE"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "product_images_pkey",
+        "definition": "CREATE UNIQUE INDEX product_images_pkey ON public.product_images USING btree (id)"
+      },
+      {
+        "name": "product_images_productId_idx",
+        "definition": "CREATE INDEX \"product_images_productId_idx\" ON public.product_images USING btree (\"productId\")"
+      }
+    ]
+  },
+  "product_reviews": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "productId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "customerId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "rating",
+        "type": "integer",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "comment",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "isApproved",
+        "type": "boolean",
+        "required": true,
+        "default_value": "false"
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "product_reviews_comment_check",
+        "type": "c",
+        "definition": "CHECK (((length(comment) >= 1) AND (length(comment) <= 5000)))"
+      },
+      {
+        "name": "product_reviews_customerId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"customerId\") REFERENCES profiles(id)"
+      },
+      {
+        "name": "product_reviews_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "product_reviews_productId_customerId_key",
+        "type": "u",
+        "definition": "UNIQUE (\"productId\", \"customerId\")"
+      },
+      {
+        "name": "product_reviews_productId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"productId\") REFERENCES products(id)"
+      },
+      {
+        "name": "product_reviews_rating_check",
+        "type": "c",
+        "definition": "CHECK (((rating >= 1) AND (rating <= 5)))"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "product_reviews_customerId_idx",
+        "definition": "CREATE INDEX \"product_reviews_customerId_idx\" ON public.product_reviews USING btree (\"customerId\")"
+      },
+      {
+        "name": "product_reviews_pkey",
+        "definition": "CREATE UNIQUE INDEX product_reviews_pkey ON public.product_reviews USING btree (id)"
+      },
+      {
+        "name": "product_reviews_productId_customerId_key",
+        "definition": "CREATE UNIQUE INDEX \"product_reviews_productId_customerId_key\" ON public.product_reviews USING btree (\"productId\", \"customerId\")"
+      },
+      {
+        "name": "product_reviews_productId_idx",
+        "definition": "CREATE INDEX \"product_reviews_productId_idx\" ON public.product_reviews USING btree (\"productId\")"
+      }
+    ]
+  },
+  "product_sizes": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "sortOrder",
+        "type": "integer",
+        "required": true,
+        "default_value": "0"
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "product_sizes_name_key",
+        "type": "u",
+        "definition": "UNIQUE (name)"
+      },
+      {
+        "name": "product_sizes_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "product_sizes_name_key",
+        "definition": "CREATE UNIQUE INDEX product_sizes_name_key ON public.product_sizes USING btree (name)"
+      },
+      {
+        "name": "product_sizes_pkey",
+        "definition": "CREATE UNIQUE INDEX product_sizes_pkey ON public.product_sizes USING btree (id)"
+      }
+    ]
+  },
+  "product_variants": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "productId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "sku",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "size",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "color",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "priceDiff",
+        "type": "numeric(14,2)",
+        "required": true,
+        "default_value": "0"
+      },
+      {
+        "name": "isActive",
+        "type": "boolean",
+        "required": true,
+        "default_value": "true"
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "product_variants_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "product_variants_productId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"productId\") REFERENCES products(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "product_variants_productId_size_color_key",
+        "type": "u",
+        "definition": "UNIQUE (\"productId\", size, color)"
+      },
+      {
+        "name": "product_variants_sku_key",
+        "type": "u",
+        "definition": "UNIQUE (sku)"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "product_variants_pkey",
+        "definition": "CREATE UNIQUE INDEX product_variants_pkey ON public.product_variants USING btree (id)"
+      },
+      {
+        "name": "product_variants_productId_idx",
+        "definition": "CREATE INDEX \"product_variants_productId_idx\" ON public.product_variants USING btree (\"productId\")"
+      },
+      {
+        "name": "product_variants_productId_size_color_key",
+        "definition": "CREATE UNIQUE INDEX \"product_variants_productId_size_color_key\" ON public.product_variants USING btree (\"productId\", size, color)"
+      },
+      {
+        "name": "product_variants_sku_key",
+        "definition": "CREATE UNIQUE INDEX product_variants_sku_key ON public.product_variants USING btree (sku)"
+      }
+    ]
+  },
+  "products": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "slug",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "sku",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "required": true,
+        "default_value": "''::text"
+      },
+      {
+        "name": "shortDescription",
+        "type": "text",
+        "required": true,
+        "default_value": "''::text"
+      },
+      {
+        "name": "price",
+        "type": "numeric(14,2)",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "comparePrice",
+        "type": "numeric(14,2)",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "categoryId",
+        "type": "uuid",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "collectionId",
+        "type": "uuid",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "material",
+        "type": "text",
+        "required": false,
+        "default_value": "''::text"
+      },
+      {
+        "name": "careInstructions",
+        "type": "text",
+        "required": false,
+        "default_value": "''::text"
+      },
+      {
+        "name": "isActive",
+        "type": "boolean",
+        "required": true,
+        "default_value": "false"
+      },
+      {
+        "name": "isFeatured",
+        "type": "boolean",
+        "required": true,
+        "default_value": "false"
+      },
+      {
+        "name": "archivedAt",
+        "type": "timestamp with time zone",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "soldCount",
+        "type": "integer",
+        "required": true,
+        "default_value": "0"
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "products_categoryId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"categoryId\") REFERENCES product_categories(id)"
+      },
+      {
+        "name": "products_collectionId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"collectionId\") REFERENCES product_collections(id)"
+      },
+      {
+        "name": "products_comparePrice_check",
+        "type": "c",
+        "definition": "CHECK ((\"comparePrice\" >= (0)::numeric))"
+      },
+      {
+        "name": "products_name_check",
+        "type": "c",
+        "definition": "CHECK ((length(name) > 0))"
+      },
+      {
+        "name": "products_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "products_price_check",
+        "type": "c",
+        "definition": "CHECK ((price >= (0)::numeric))"
+      },
+      {
+        "name": "products_sku_key",
+        "type": "u",
+        "definition": "UNIQUE (sku)"
+      },
+      {
+        "name": "products_slug_key",
+        "type": "u",
+        "definition": "UNIQUE (slug)"
+      },
+      {
+        "name": "products_soldCount_check",
+        "type": "c",
+        "definition": "CHECK ((\"soldCount\" >= 0))"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "product_search",
+        "definition": "CREATE INDEX product_search ON public.products USING gin (to_tsvector('english'::regconfig, ((name || ' '::text) || description)))"
+      },
+      {
+        "name": "products_categoryId_idx",
+        "definition": "CREATE INDEX \"products_categoryId_idx\" ON public.products USING btree (\"categoryId\")"
+      },
+      {
+        "name": "products_collectionId_idx",
+        "definition": "CREATE INDEX \"products_collectionId_idx\" ON public.products USING btree (\"collectionId\")"
+      },
+      {
+        "name": "products_pkey",
+        "definition": "CREATE UNIQUE INDEX products_pkey ON public.products USING btree (id)"
+      },
+      {
+        "name": "products_published",
+        "definition": "CREATE INDEX products_published ON public.products USING btree (\"createdAt\" DESC) WHERE (\"isActive\" AND (\"archivedAt\" IS NULL))"
+      },
+      {
+        "name": "products_sku_key",
+        "definition": "CREATE UNIQUE INDEX products_sku_key ON public.products USING btree (sku)"
+      },
+      {
+        "name": "products_slug_key",
+        "definition": "CREATE UNIQUE INDEX products_slug_key ON public.products USING btree (slug)"
+      }
+    ]
+  },
+  "profiles": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "email",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "firstName",
+        "type": "text",
+        "required": true,
+        "default_value": "''::text"
+      },
+      {
+        "name": "lastName",
+        "type": "text",
+        "required": true,
+        "default_value": "''::text"
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default_value": "''::text"
+      },
+      {
+        "name": "phone",
+        "type": "text",
+        "required": true,
+        "default_value": "''::text"
+      },
+      {
+        "name": "avatarUrl",
+        "type": "text",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "isActive",
+        "type": "boolean",
+        "required": true,
+        "default_value": "true"
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "profiles_id_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "profiles_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "profiles_id_idx",
+        "definition": "CREATE INDEX profiles_id_idx ON public.profiles USING btree (id)"
+      },
+      {
+        "name": "profiles_pkey",
+        "definition": "CREATE UNIQUE INDEX profiles_pkey ON public.profiles USING btree (id)"
+      }
+    ]
+  },
+  "refunds": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "returnId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "paymentId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "amount",
+        "type": "numeric(14,2)",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": true,
+        "default_value": "'PENDING'::text"
+      },
+      {
+        "name": "gatewayId",
+        "type": "text",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "restockedAt",
+        "type": "timestamp with time zone",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "dispatchStartedAt",
+        "type": "timestamp with time zone",
+        "required": false,
+        "default_value": null
+      }
+    ],
+    "constraints": [
+      {
+        "name": "refunds_amount_check",
+        "type": "c",
+        "definition": "CHECK ((amount > (0)::numeric))"
+      },
+      {
+        "name": "refunds_gatewayId_key",
+        "type": "u",
+        "definition": "UNIQUE (\"gatewayId\")"
+      },
+      {
+        "name": "refunds_paymentId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"paymentId\") REFERENCES payments(id)"
+      },
+      {
+        "name": "refunds_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "refunds_returnId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"returnId\") REFERENCES returns(id)"
+      },
+      {
+        "name": "refunds_returnId_key",
+        "type": "u",
+        "definition": "UNIQUE (\"returnId\")"
+      },
+      {
+        "name": "refunds_status_check",
+        "type": "c",
+        "definition": "CHECK ((status = ANY (ARRAY['PENDING'::text, 'SUCCESS'::text, 'FAILED'::text])))"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "refunds_gatewayId_key",
+        "definition": "CREATE UNIQUE INDEX \"refunds_gatewayId_key\" ON public.refunds USING btree (\"gatewayId\")"
+      },
+      {
+        "name": "refunds_paymentId_idx",
+        "definition": "CREATE INDEX \"refunds_paymentId_idx\" ON public.refunds USING btree (\"paymentId\")"
+      },
+      {
+        "name": "refunds_pkey",
+        "definition": "CREATE UNIQUE INDEX refunds_pkey ON public.refunds USING btree (id)"
+      },
+      {
+        "name": "refunds_returnId_idx",
+        "definition": "CREATE INDEX \"refunds_returnId_idx\" ON public.refunds USING btree (\"returnId\")"
+      },
+      {
+        "name": "refunds_returnId_key",
+        "definition": "CREATE UNIQUE INDEX \"refunds_returnId_key\" ON public.refunds USING btree (\"returnId\")"
+      }
+    ]
+  },
+  "return_items": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "returnId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "orderItemId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "quantity",
+        "type": "integer",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "return_items_orderItemId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"orderItemId\") REFERENCES order_items(id)"
+      },
+      {
+        "name": "return_items_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "return_items_quantity_check",
+        "type": "c",
+        "definition": "CHECK ((quantity > 0))"
+      },
+      {
+        "name": "return_items_returnId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"returnId\") REFERENCES returns(id)"
+      },
+      {
+        "name": "return_items_returnId_orderItemId_key",
+        "type": "u",
+        "definition": "UNIQUE (\"returnId\", \"orderItemId\")"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "return_items_orderItemId_idx",
+        "definition": "CREATE INDEX \"return_items_orderItemId_idx\" ON public.return_items USING btree (\"orderItemId\")"
+      },
+      {
+        "name": "return_items_pkey",
+        "definition": "CREATE UNIQUE INDEX return_items_pkey ON public.return_items USING btree (id)"
+      },
+      {
+        "name": "return_items_returnId_idx",
+        "definition": "CREATE INDEX \"return_items_returnId_idx\" ON public.return_items USING btree (\"returnId\")"
+      },
+      {
+        "name": "return_items_returnId_orderItemId_key",
+        "definition": "CREATE UNIQUE INDEX \"return_items_returnId_orderItemId_key\" ON public.return_items USING btree (\"returnId\", \"orderItemId\")"
+      }
+    ]
+  },
+  "returns": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "orderId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "customerId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "reason",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": true,
+        "default_value": "'REQUESTED'::text"
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "returns_customerId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"customerId\") REFERENCES profiles(id)"
+      },
+      {
+        "name": "returns_orderId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"orderId\") REFERENCES orders(id)"
+      },
+      {
+        "name": "returns_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "returns_reason_check",
+        "type": "c",
+        "definition": "CHECK (((length(reason) >= 1) AND (length(reason) <= 2000)))"
+      },
+      {
+        "name": "returns_status_check",
+        "type": "c",
+        "definition": "CHECK ((status = ANY (ARRAY['REQUESTED'::text, 'UNDER_REVIEW'::text, 'APPROVED'::text, 'REJECTED'::text, 'RECEIVED'::text, 'REFUNDED'::text, 'COMPLETED'::text])))"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "returns_customerId_idx",
+        "definition": "CREATE INDEX \"returns_customerId_idx\" ON public.returns USING btree (\"customerId\")"
+      },
+      {
+        "name": "returns_orderId_idx",
+        "definition": "CREATE INDEX \"returns_orderId_idx\" ON public.returns USING btree (\"orderId\")"
+      },
+      {
+        "name": "returns_pkey",
+        "definition": "CREATE UNIQUE INDEX returns_pkey ON public.returns USING btree (id)"
+      }
+    ]
+  },
+  "shipments": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "orderId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "carrier",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "trackingNumber",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "shipments_orderId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"orderId\") REFERENCES orders(id)"
+      },
+      {
+        "name": "shipments_orderId_key",
+        "type": "u",
+        "definition": "UNIQUE (\"orderId\")"
+      },
+      {
+        "name": "shipments_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "shipments_orderId_idx",
+        "definition": "CREATE INDEX \"shipments_orderId_idx\" ON public.shipments USING btree (\"orderId\")"
+      },
+      {
+        "name": "shipments_orderId_key",
+        "definition": "CREATE UNIQUE INDEX \"shipments_orderId_key\" ON public.shipments USING btree (\"orderId\")"
+      },
+      {
+        "name": "shipments_pkey",
+        "definition": "CREATE UNIQUE INDEX shipments_pkey ON public.shipments USING btree (id)"
+      }
+    ]
+  },
+  "shipping_addresses": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "orderId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "recipient",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "phoneNumber",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "street",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "city",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "state",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "country",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "postalCode",
+        "type": "text",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "shipping_addresses_orderId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"orderId\") REFERENCES orders(id)"
+      },
+      {
+        "name": "shipping_addresses_orderId_key",
+        "type": "u",
+        "definition": "UNIQUE (\"orderId\")"
+      },
+      {
+        "name": "shipping_addresses_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "shipping_addresses_orderId_idx",
+        "definition": "CREATE INDEX \"shipping_addresses_orderId_idx\" ON public.shipping_addresses USING btree (\"orderId\")"
+      },
+      {
+        "name": "shipping_addresses_orderId_key",
+        "definition": "CREATE UNIQUE INDEX \"shipping_addresses_orderId_key\" ON public.shipping_addresses USING btree (\"orderId\")"
+      },
+      {
+        "name": "shipping_addresses_pkey",
+        "definition": "CREATE UNIQUE INDEX shipping_addresses_pkey ON public.shipping_addresses USING btree (id)"
+      }
+    ]
+  },
+  "shipping_rates": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "zoneId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "fee",
+        "type": "numeric(14,2)",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "isActive",
+        "type": "boolean",
+        "required": true,
+        "default_value": "true"
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "shipping_rates_fee_check",
+        "type": "c",
+        "definition": "CHECK ((fee >= (0)::numeric))"
+      },
+      {
+        "name": "shipping_rates_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "shipping_rates_zoneId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"zoneId\") REFERENCES shipping_zones(id) ON DELETE CASCADE"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "shipping_rates_pkey",
+        "definition": "CREATE UNIQUE INDEX shipping_rates_pkey ON public.shipping_rates USING btree (id)"
+      },
+      {
+        "name": "shipping_rates_zoneId_idx",
+        "definition": "CREATE INDEX \"shipping_rates_zoneId_idx\" ON public.shipping_rates USING btree (\"zoneId\")"
+      }
+    ]
+  },
+  "shipping_zones": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "country",
+        "type": "text",
+        "required": true,
+        "default_value": "'Nigeria'::text"
+      },
+      {
+        "name": "states",
+        "type": "text[]",
+        "required": true,
+        "default_value": "'{}'::text[]"
+      },
+      {
+        "name": "fee",
+        "type": "numeric(14,2)",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "estimatedDays",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "freeDeliveryThreshold",
+        "type": "numeric(14,2)",
+        "required": false,
+        "default_value": null
+      },
+      {
+        "name": "isActive",
+        "type": "boolean",
+        "required": true,
+        "default_value": "true"
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "shipping_zones_fee_check",
+        "type": "c",
+        "definition": "CHECK ((fee >= (0)::numeric))"
+      },
+      {
+        "name": "shipping_zones_freeDeliveryThreshold_check",
+        "type": "c",
+        "definition": "CHECK ((\"freeDeliveryThreshold\" >= (0)::numeric))"
+      },
+      {
+        "name": "shipping_zones_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "shipping_zones_pkey",
+        "definition": "CREATE UNIQUE INDEX shipping_zones_pkey ON public.shipping_zones USING btree (id)"
+      }
+    ]
+  },
+  "staff_permissions": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "role",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "permission",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "staff_permissions_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "staff_permissions_role_permission_key",
+        "type": "u",
+        "definition": "UNIQUE (role, permission)"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "staff_permissions_pkey",
+        "definition": "CREATE UNIQUE INDEX staff_permissions_pkey ON public.staff_permissions USING btree (id)"
+      },
+      {
+        "name": "staff_permissions_role_permission_key",
+        "definition": "CREATE UNIQUE INDEX staff_permissions_role_permission_key ON public.staff_permissions USING btree (role, permission)"
+      }
+    ]
+  },
+  "store_settings": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "section",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "values",
+        "type": "jsonb",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "version",
+        "type": "integer",
+        "required": true,
+        "default_value": "1"
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "store_settings_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "store_settings_section_key",
+        "type": "u",
+        "definition": "UNIQUE (section)"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "store_settings_pkey",
+        "definition": "CREATE UNIQUE INDEX store_settings_pkey ON public.store_settings USING btree (id)"
+      },
+      {
+        "name": "store_settings_section_key",
+        "definition": "CREATE UNIQUE INDEX store_settings_section_key ON public.store_settings USING btree (section)"
+      }
+    ]
+  },
+  "website_settings": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "slug",
+        "type": "text",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "data",
+        "type": "jsonb",
+        "required": true,
+        "default_value": "'{}'::jsonb"
+      },
+      {
+        "name": "isActive",
+        "type": "boolean",
+        "required": true,
+        "default_value": "true"
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "website_settings_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "website_settings_slug_key",
+        "type": "u",
+        "definition": "UNIQUE (slug)"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "website_settings_pkey",
+        "definition": "CREATE UNIQUE INDEX website_settings_pkey ON public.website_settings USING btree (id)"
+      },
+      {
+        "name": "website_settings_slug_key",
+        "definition": "CREATE UNIQUE INDEX website_settings_slug_key ON public.website_settings USING btree (slug)"
+      }
+    ]
+  },
+  "wishlist_items": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "wishlistId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "productId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "wishlist_items_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "wishlist_items_productId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"productId\") REFERENCES products(id)"
+      },
+      {
+        "name": "wishlist_items_wishlistId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"wishlistId\") REFERENCES wishlists(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "wishlist_items_wishlistId_productId_key",
+        "type": "u",
+        "definition": "UNIQUE (\"wishlistId\", \"productId\")"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "wishlist_items_pkey",
+        "definition": "CREATE UNIQUE INDEX wishlist_items_pkey ON public.wishlist_items USING btree (id)"
+      },
+      {
+        "name": "wishlist_items_productId_idx",
+        "definition": "CREATE INDEX \"wishlist_items_productId_idx\" ON public.wishlist_items USING btree (\"productId\")"
+      },
+      {
+        "name": "wishlist_items_wishlistId_idx",
+        "definition": "CREATE INDEX \"wishlist_items_wishlistId_idx\" ON public.wishlist_items USING btree (\"wishlistId\")"
+      },
+      {
+        "name": "wishlist_items_wishlistId_productId_key",
+        "definition": "CREATE UNIQUE INDEX \"wishlist_items_wishlistId_productId_key\" ON public.wishlist_items USING btree (\"wishlistId\", \"productId\")"
+      }
+    ]
+  },
+  "wishlists": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "customerId",
+        "type": "uuid",
+        "required": true,
+        "default_value": null
+      },
+      {
+        "name": "createdAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      },
+      {
+        "name": "updatedAt",
+        "type": "timestamp with time zone",
+        "required": true,
+        "default_value": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "wishlists_customerId_fkey",
+        "type": "f",
+        "definition": "FOREIGN KEY (\"customerId\") REFERENCES profiles(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "wishlists_customerId_key",
+        "type": "u",
+        "definition": "UNIQUE (\"customerId\")"
+      },
+      {
+        "name": "wishlists_pkey",
+        "type": "p",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "wishlists_customerId_idx",
+        "definition": "CREATE INDEX \"wishlists_customerId_idx\" ON public.wishlists USING btree (\"customerId\")"
+      },
+      {
+        "name": "wishlists_customerId_key",
+        "definition": "CREATE UNIQUE INDEX \"wishlists_customerId_key\" ON public.wishlists USING btree (\"customerId\")"
+      },
+      {
+        "name": "wishlists_pkey",
+        "definition": "CREATE UNIQUE INDEX wishlists_pkey ON public.wishlists USING btree (id)"
+      }
+    ]
+  }
+}

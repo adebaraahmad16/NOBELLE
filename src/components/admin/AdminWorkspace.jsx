@@ -13,7 +13,7 @@ const groups = [
     ['Inventory', 'inventory', Warehouse, [['Stock Overview', 'inventory'], ['Stock History', 'stock-history']]],
     ['Customers', 'customers', Users],
   ]],
-  ['Finance', [['Payments', 'payments', CreditCard], ['Promotions', 'coupons', TicketPercent]]],
+  ['Finance', [['Payments', 'payments', CreditCard], ['Promotions', 'coupons', TicketPercent, [['Coupon Codes','coupons'],['Product Discounts','discounts']]]]],
   ['Management', [
     ['Website', 'website', Globe, [['Homepage', 'website'], ['Homepage Sections', 'homepage-sections'], ['Banners', 'banners'], ['About', 'about'], ['Contact', 'contact-content'], ['Messages', 'messages']]],
     ['Analytics', 'reports', BarChart3],

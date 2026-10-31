@@ -14,7 +14,7 @@ function AnimatedSection({ children, className = '' }) {
 
 export default function ContactPage() {
   const [contact,setContact] = useState({});
-  useEffect(() => { api('/content/contact').then(value => setContact(value || {})).catch(() => {}); }, []);
+  useEffect(() => { api('/content/contact').then(value => setContact(value || {})).catch(e => setError(e.message)); }, []);
   const [formData, setFormData] = useState({
     name: '',
     email: '',

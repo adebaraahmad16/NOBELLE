@@ -6,8 +6,7 @@ import { adminAuthApi } from '../../utils/api';
 
 /*
   NOBELLE Admin — Password reset screen.
-  Connects to POST /api/v1/admin/auth/reset-password.
-  Token arrives from the email link: /admin/reset-password?token=...
+  Uses the Supabase Auth recovery session established by the email link.
 */
 
 const BURGUNDY = '#641F2D';
@@ -34,7 +33,7 @@ export default function AdminResetPasswordPage() {
   const { isAuthenticated } = useAdminAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const token = searchParams.get('token');
+  const token = searchParams.get('token') || 'supabase-recovery-session';
 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -45,7 +44,7 @@ export default function AdminResetPasswordPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !window.location.pathname.endsWith('/reset-password')) {
       navigate('/admin', { replace: true });
     }
   }, [isAuthenticated, navigate]);

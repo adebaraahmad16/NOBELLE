@@ -1,0 +1,7 @@
+.tmp
+backend
+.env
+.env.*
+node_modules
+tests
+supabase
