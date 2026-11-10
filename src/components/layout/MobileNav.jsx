@@ -1,14 +1,23 @@
 import { Link, useLocation } from 'react-router-dom';
-import { X, ChevronRight } from 'lucide-react';
+import { X, ChevronRight, Search, Heart, User } from 'lucide-react';
 
-export default function MobileNav({ isOpen, onClose, navLinks }) {
+export default function MobileNav({ isOpen, onClose, navLinks, onOpenSearch }) {
   const location = useLocation();
+
+  const isLinkActive = (path) => {
+    if (path === '/') return location.pathname === '/';
+    if (path.includes('?')) {
+      const [base, query] = path.split('?');
+      return location.pathname === base && location.search.includes(query);
+    }
+    return location.pathname === path && !location.search.includes('collection=');
+  };
 
   return (
     <>
-      {/* Overlay */}
+      {/* Backdrop */}
       <div
-        className={`fixed inset-0 bg-black/50 z-[60] transition-opacity duration-300 ${
+        className={`fixed inset-0 bg-[#1A0A0F]/60 z-[60] transition-opacity duration-300 ${
           isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
         }`}
         onClick={onClose}
@@ -16,88 +25,144 @@ export default function MobileNav({ isOpen, onClose, navLinks }) {
 
       {/* Drawer */}
       <div
-        className={`fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-white z-[70] transition-transform duration-400 ease-out ${
+        className={`fixed top-0 left-0 h-full w-84 max-w-[85vw] bg-[#F8F3ED] z-[70] transition-transform duration-300 ease-out flex flex-col shadow-2xl ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-brand-beige">
-          <div className="flex items-center gap-2.5">
+        <div className="flex items-center justify-between p-5 border-b border-[#EFE5DA] bg-[#F8F3ED]">
+          <Link to="/" onClick={onClose} className="flex items-center gap-2.5">
             <img
               src="/nobelle.png"
               alt="NOBELLE Logo"
-              className="w-8 h-8 object-contain rounded-full border border-brand-gold/40 shadow-sm"
+              className="w-9 h-9 object-contain rounded-full border border-[#C8A96A]/60 bg-white/40 p-0.5 shadow-xs"
             />
-            <h2 className="font-serif text-xl font-bold tracking-wider">NOBELLE</h2>
-          </div>
+            <div>
+              <span className="font-serif text-xl font-bold tracking-wider text-[#292323] block">
+                NOBELLE
+              </span>
+              <span className="text-[9px] uppercase tracking-widest text-[#641B32] font-semibold block -mt-1">
+                Ready-to-Wear
+              </span>
+            </div>
+          </Link>
           <button
             onClick={onClose}
-            className="p-1 text-brand-gray hover:text-brand-charcoal transition-colors"
+            className="p-1.5 text-[#292323] hover:text-[#641B32] transition-colors"
             aria-label="Close menu"
           >
             <X size={22} />
           </button>
         </div>
 
-        {/* Navigation */}
-        <nav className="p-6">
-          <ul className="space-y-1">
-            {navLinks.map((link, index) => (
-              <li
-                key={link.path}
-                style={{ animationDelay: `${index * 50}ms` }}
-                className={isOpen ? 'animate-fade-in-up' : ''}
-              >
-                <Link
-                  to={link.path}
-                  onClick={onClose}
-                  className={`flex items-center justify-between py-3 px-2 text-sm tracking-wider uppercase transition-colors duration-300 border-b border-brand-beige/50 ${
-                    location.pathname === link.path
-                      ? 'text-brand-red font-medium'
-                      : 'text-brand-charcoal hover:text-brand-red'
-                  }`}
-                >
-                  {link.name}
-                  <ChevronRight size={16} className="text-brand-gray-light" />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-
-        {/* Category Links */}
-        <div className="px-6 pt-4 border-t border-brand-beige">
-          <p className="text-xs tracking-widest uppercase text-brand-gray mb-4">Categories</p>
-          <ul className="space-y-2">
-            {['Dresses', 'Two-Piece Sets', 'Casual Wear', 'Corporate Wear'].map((cat) => (
-              <li key={cat}>
-                <Link
-                  to="/categories"
-                  onClick={onClose}
-                  className="text-sm text-brand-gray hover:text-brand-red transition-colors"
-                >
-                  {cat}
-                </Link>
-              </li>
-            ))}
-          </ul>
+        {/* Search quick button */}
+        <div className="p-4 border-b border-[#EFE5DA] bg-white">
+          <button
+            onClick={onOpenSearch}
+            className="w-full flex items-center justify-between px-3.5 py-2.5 bg-[#F8F3ED] border border-[#EFE5DA] text-xs text-[#6B6B6B] hover:text-[#292323] transition-colors"
+          >
+            <span className="flex items-center gap-2">
+              <Search size={14} className="text-[#641B32]" />
+              <span>Search outfits & styles...</span>
+            </span>
+            <span className="text-[10px] uppercase tracking-wider text-[#641B32] font-semibold">Search</span>
+          </button>
         </div>
 
-        {/* Footer */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-brand-beige bg-brand-cream">
-          <Link
-            to="/size-guide"
-            onClick={onClose}
-            className="block text-xs tracking-wider uppercase text-brand-gray hover:text-brand-red mb-2 transition-colors"
-          >
-            Size Guide
+        {/* Scrollable Navigation Body */}
+        <div className="flex-1 overflow-y-auto p-5 space-y-6">
+          {/* Main Navigation */}
+          <div>
+            <p className="text-[10px] tracking-widest uppercase text-[#6B6B6B] mb-2 font-semibold">
+              Menu
+            </p>
+            <ul className="space-y-1">
+              {navLinks.map((link) => {
+                const active = isLinkActive(link.path);
+                return (
+                  <li key={link.path}>
+                    <Link
+                      to={link.path}
+                      onClick={onClose}
+                      className={`flex items-center justify-between py-2.5 px-3 text-xs tracking-wider uppercase transition-colors duration-200 border-b border-[#EFE5DA]/60 ${
+                        active
+                          ? 'text-[#641B32] font-bold bg-[#EFE5DA]/40'
+                          : 'text-[#292323] hover:text-[#641B32]'
+                      }`}
+                    >
+                      <span>{link.name}</span>
+                      <ChevronRight size={14} className={active ? 'text-[#641B32]' : 'text-[#6B6B6B]'} />
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+
+          {/* Authentic African Categories */}
+          <div>
+            <p className="text-[10px] tracking-widest uppercase text-[#6B6B6B] mb-2 font-semibold">
+              Shop By Style
+            </p>
+            <div className="grid grid-cols-2 gap-1.5 text-xs">
+              {[
+                { label: 'Ankara', slug: 'ankara' },
+                { label: 'Dresses', slug: 'dresses' },
+                { label: 'Aso-Oke', slug: 'aso-oke' },
+                { label: 'Adire', slug: 'adire' },
+                { label: 'Two-Piece Sets', slug: 'two-piece-sets' },
+                { label: 'Kaftans & Boubou', slug: 'kaftans' },
+                { label: 'Occasion Wear', slug: 'occasion-wear' },
+                { label: 'Jumpsuits', slug: 'jumpsuits' },
+              ].map((cat) => (
+                <Link
+                  key={cat.slug}
+                  to={`/shop?category=${cat.slug}`}
+                  onClick={onClose}
+                  className="px-2.5 py-1.5 bg-white border border-[#EFE5DA] text-[#292323] hover:border-[#641B32] hover:text-[#641B32] transition-colors truncate text-[11px]"
+                >
+                  {cat.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Account & Wishlist Links */}
+          <div className="pt-2">
+            <p className="text-[10px] tracking-widest uppercase text-[#6B6B6B] mb-2 font-semibold">
+              Your Experience
+            </p>
+            <div className="space-y-1">
+              <Link
+                to="/account"
+                onClick={onClose}
+                className="flex items-center gap-2.5 py-2 px-3 text-xs text-[#292323] hover:text-[#641B32] transition-colors border-b border-[#EFE5DA]/60"
+              >
+                <User size={15} className="text-[#641B32]" />
+                <span>Account & Orders</span>
+              </Link>
+              <Link
+                to="/account"
+                onClick={onClose}
+                className="flex items-center gap-2.5 py-2 px-3 text-xs text-[#292323] hover:text-[#641B32] transition-colors border-b border-[#EFE5DA]/60"
+              >
+                <Heart size={15} className="text-[#641B32]" />
+                <span>Saved Wishlist</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Drawer Footer */}
+        <div className="p-4 border-t border-[#EFE5DA] bg-[#EFE5DA]/50 flex items-center justify-between text-[11px] text-[#6B6B6B]">
+          <Link to="/shipping-policy" onClick={onClose} className="hover:text-[#641B32] underline">
+            Shipping
           </Link>
-          <Link
-            to="/return-policy"
-            onClick={onClose}
-            className="block text-xs tracking-wider uppercase text-brand-gray hover:text-brand-red transition-colors"
-          >
-            Return Policy
+          <Link to="/return-policy" onClick={onClose} className="hover:text-[#641B32] underline">
+            Returns
+          </Link>
+          <Link to="/contact" onClick={onClose} className="hover:text-[#641B32] underline">
+            Help & FAQs
           </Link>
         </div>
       </div>

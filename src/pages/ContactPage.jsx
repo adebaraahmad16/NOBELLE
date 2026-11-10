@@ -1,6 +1,6 @@
 import { api } from '../api/client';
 import { useState, useEffect } from 'react';
-import { Mail, Phone, MapPin, Clock, Send, Camera, MessageCircle, Hash } from 'lucide-react';
+import { Mail, Phone, MapPin, Clock, Send, MessageSquare, CheckCircle2 } from 'lucide-react';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
 function AnimatedSection({ children, className = '' }) {
@@ -13,8 +13,15 @@ function AnimatedSection({ children, className = '' }) {
 }
 
 export default function ContactPage() {
-  const [contact,setContact] = useState({});
-  useEffect(() => { api('/content/contact').then(value => setContact(value || {})).catch(e => setError(e.message)); }, []);
+  const [contact, setContact] = useState({});
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    api('/content/contact')
+      .then(value => setContact(value || {}))
+      .catch(e => setError(e.message));
+  }, []);
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -22,121 +29,169 @@ export default function ContactPage() {
     message: '',
   });
   const [submitted, setSubmitted] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
   const handleSubmit = async (e) => {
-    e.preventDefault(); setBusy(true); setError('');
-    try { await api('/contact', { method: 'POST', body: formData }); setSubmitted(true); setFormData({ name: '', email: '', subject: '', message: '' }); }
-    catch (error) { setError(error.message); } finally { setBusy(false); }
+    e.preventDefault();
+    setBusy(true);
+    setError('');
+    try {
+      await api('/contact', { method: 'POST', body: formData });
+      setSubmitted(true);
+      setFormData({ name: '', email: '', subject: '', message: '' });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
-    <div>
-      {/* Page Header */}
-      <div className="bg-brand-beige py-12 lg:py-16">
-        <div className="container-custom text-center">
-          <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-brand-charcoal mb-2">
-            Contact Us
+    <div className="bg-white">
+      {/* ── 1. HERO SECTION WITH AUTHENTIC AFRICAN FASHION BACKGROUND ── */}
+      <section className="relative min-h-[380px] lg:min-h-[440px] flex items-center justify-center overflow-hidden">
+        {/* Full-width authentic Nigerian/African fashion imagery (distinct from About page) */}
+        <img
+          src="/images/occasion_wear_banner.jpg"
+          alt="NOBELLE Nigerian Fashion Contact"
+          className="absolute inset-0 w-full h-full object-cover object-center"
+        />
+        {/* Subtle dark burgundy overlay for readability (no gradients) */}
+        <div
+          className="absolute inset-0"
+          style={{ backgroundColor: 'rgba(26, 10, 15, 0.78)' }}
+        />
+
+        <div className="container-custom relative z-10 text-center py-16 px-4 max-w-3xl mx-auto">
+          <p className="text-brand-gold text-xs sm:text-sm tracking-[0.3em] uppercase mb-3 font-medium">
+            Customer Care & Enquiries
+          </p>
+          <h1 className="font-serif text-3xl sm:text-5xl text-white font-bold mb-4">
+            We'd Love to Hear From You
           </h1>
-          <p className="text-brand-gray text-sm tracking-wider">
-            Home / <span className="text-brand-charcoal">Contact</span>
+          <p className="text-white/85 text-base sm:text-lg leading-relaxed max-w-xl mx-auto font-light">
+            Whether you have an enquiry about our latest Ankara drop, need sizing advice, or want assistance with an order — our team is here for you.
           </p>
         </div>
-      </div>
+      </section>
 
-      <section className="section-padding bg-white">
+      {/* ── 2. MAIN CONTACT SECTION (INFO & ELEVATED FORM CARD) ── */}
+      <section className="section-padding bg-brand-cream">
         <div className="container-custom">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-            {/* Contact Info */}
-            <div className="lg:col-span-1">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+            {/* Contact Details Column */}
+            <div className="lg:col-span-5">
               <AnimatedSection>
-                <h2 className="font-serif text-2xl text-brand-charcoal mb-6">Get in Touch</h2>
-                <p className="text-brand-gray text-sm leading-relaxed mb-8">
-                  We'd love to hear from you. Whether you have questions about our collections,
-                  need styling advice, or want to share your NOBELLE experience — we're here for you.
-                </p>
+                <div className="bg-white p-8 sm:p-10 border border-brand-beige-dark/40 shadow-sm">
+                  <p className="text-brand-gold text-xs tracking-[0.25em] uppercase mb-2 font-semibold">
+                    Direct Assistance
+                  </p>
+                  <h2 className="font-serif text-2xl sm:text-3xl text-brand-charcoal mb-4">
+                    Get in Touch
+                  </h2>
+                  <p className="text-brand-gray text-sm leading-relaxed mb-8">
+                    Our Lagos-based concierge is available Monday through Saturday to answer questions regarding sizes, order tracking, and bespoke styling advice.
+                  </p>
 
-                <div className="space-y-6">
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 bg-brand-beige flex items-center justify-center flex-shrink-0">
-                      <Mail size={18} className="text-brand-red" />
+                  <div className="space-y-6">
+                    {/* Email */}
+                    <div className="flex items-start gap-4">
+                      <div className="w-10 h-10 bg-brand-cream flex items-center justify-center flex-shrink-0 text-brand-burgundy border border-brand-beige-dark/30">
+                        <Mail size={18} />
+                      </div>
+                      <div>
+                        <p className="text-xs tracking-wider uppercase text-brand-gray mb-0.5 font-medium">Email Us</p>
+                        <p className="text-sm font-medium text-brand-charcoal">
+                          {contact.email || 'support@nobellefashion.com'}
+                        </p>
+                        <p className="text-xs text-brand-gray mt-0.5">We reply within 24 hours</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs tracking-wider uppercase text-brand-gray mb-1">Email</p>
-                      <p className="text-sm text-brand-charcoal">{contact.email || 'Contact details will be published here.'}</p>
-                      <p className="text-sm text-brand-charcoal"></p>
-                    </div>
-                  </div>
 
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 bg-brand-beige flex items-center justify-center flex-shrink-0">
-                      <Phone size={18} className="text-brand-red" />
+                    {/* Phone */}
+                    <div className="flex items-start gap-4">
+                      <div className="w-10 h-10 bg-brand-cream flex items-center justify-center flex-shrink-0 text-brand-burgundy border border-brand-beige-dark/30">
+                        <Phone size={18} />
+                      </div>
+                      <div>
+                        <p className="text-xs tracking-wider uppercase text-brand-gray mb-0.5 font-medium">Call or WhatsApp</p>
+                        <p className="text-sm font-medium text-brand-charcoal">
+                          {contact.phone || '+234 800 NOBELLE'}
+                        </p>
+                        <p className="text-xs text-brand-gray mt-0.5">Mon–Sat, 9am to 6pm WAT</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs tracking-wider uppercase text-brand-gray mb-1">Phone</p>
-                      <p className="text-sm text-brand-charcoal">{contact.phone || ''}</p>
-                      <p className="text-sm text-brand-charcoal"></p>
-                    </div>
-                  </div>
 
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 bg-brand-beige flex items-center justify-center flex-shrink-0">
-                      <MapPin size={18} className="text-brand-red" />
+                    {/* Address */}
+                    <div className="flex items-start gap-4">
+                      <div className="w-10 h-10 bg-brand-cream flex items-center justify-center flex-shrink-0 text-brand-burgundy border border-brand-beige-dark/30">
+                        <MapPin size={18} />
+                      </div>
+                      <div>
+                        <p className="text-xs tracking-wider uppercase text-brand-gray mb-0.5 font-medium">Showroom & Studio</p>
+                        <p className="text-sm font-medium text-brand-charcoal leading-relaxed">
+                          {contact.address || 'Victoria Island, Lagos, Nigeria'}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs tracking-wider uppercase text-brand-gray mb-1">Address</p>
-                      <p className="text-sm text-brand-charcoal">
-                        {contact.address || ''}
-                      </p>
-                    </div>
-                  </div>
 
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 bg-brand-beige flex items-center justify-center flex-shrink-0">
-                      <Clock size={18} className="text-brand-red" />
+                    {/* Hours */}
+                    <div className="flex items-start gap-4">
+                      <div className="w-10 h-10 bg-brand-cream flex items-center justify-center flex-shrink-0 text-brand-burgundy border border-brand-beige-dark/30">
+                        <Clock size={18} />
+                      </div>
+                      <div>
+                        <p className="text-xs tracking-wider uppercase text-brand-gray mb-0.5 font-medium">Operating Hours</p>
+                        <p className="text-sm text-brand-charcoal">Monday — Friday: 9:00 AM — 6:00 PM</p>
+                        <p className="text-sm text-brand-charcoal">Saturday: 10:00 AM — 4:00 PM</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs tracking-wider uppercase text-brand-gray mb-1">Business Hours</p>
-                      <p className="text-sm text-brand-charcoal">Mon — Fri: 9:00 AM — 6:00 PM</p>
-                      <p className="text-sm text-brand-charcoal">Sat: 10:00 AM — 4:00 PM</p>
-                      <p className="text-sm text-brand-gray"></p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-8 pt-8 border-t border-brand-beige">
-                  <p className="text-xs tracking-wider uppercase text-brand-gray mb-4">Follow Us</p>
-                  <div className="flex gap-3">
-                    
-                    
-                    
                   </div>
                 </div>
               </AnimatedSection>
             </div>
 
-            {/* Contact Form */}
-            <div className="lg:col-span-2">
+            {/* Elevated Contact Form Card */}
+            <div className="lg:col-span-7">
               <AnimatedSection>
-                <div className="bg-brand-cream p-8 lg:p-12">
-                  <h3 className="font-serif text-xl text-brand-charcoal mb-6">Send Us a Message</h3>
+                <div className="bg-white p-8 sm:p-12 border border-brand-beige-dark/40 shadow-sm">
+                  <div className="flex items-center gap-3 mb-2">
+                    <MessageSquare size={20} className="text-brand-burgundy" />
+                    <p className="text-brand-gold text-xs tracking-[0.25em] uppercase font-semibold">
+                      Online Message
+                    </p>
+                  </div>
+                  <h3 className="font-serif text-2xl sm:text-3xl text-brand-charcoal mb-3">
+                    Send Us a Message
+                  </h3>
+                  <p className="text-brand-gray text-sm mb-6">
+                    Fill out the form below with your enquiry and a member of our team will get back to you promptly.
+                  </p>
 
                   {submitted && (
-                    <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 mb-6 text-sm flex items-center gap-2">
-                      <Send size={16} />
-                      Thank you! Your message has been sent. We'll get back to you within 24 hours.
+                    <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-4 mb-6 text-sm flex items-start gap-3">
+                      <CheckCircle2 size={18} className="text-green-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-semibold">Thank you for contacting NOBELLE!</p>
+                        <p className="text-xs text-green-700 mt-0.5">Your message has been received. We will respond within 24 hours.</p>
+                      </div>
                     </div>
                   )}
 
-                  <form onSubmit={handleSubmit} className="space-y-5">{error && <p role="alert">{error}</p>}
+                  {error && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 mb-6 text-sm">
+                      {error}
+                    </div>
+                  )}
+
+                  <form onSubmit={handleSubmit} className="space-y-5">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                       <div>
-                        <label className="block text-xs tracking-wider uppercase text-brand-gray mb-2">
+                        <label className="block text-xs uppercase tracking-wider text-brand-charcoal font-medium mb-1.5">
                           Your Name *
                         </label>
                         <input
@@ -145,12 +200,12 @@ export default function ContactPage() {
                           value={formData.name}
                           onChange={handleChange}
                           className="input-field"
-                          placeholder="Jane Doe"
+                          placeholder="e.g. Chioma Adebayo"
                           required
                         />
                       </div>
                       <div>
-                        <label className="block text-xs tracking-wider uppercase text-brand-gray mb-2">
+                        <label className="block text-xs uppercase tracking-wider text-brand-charcoal font-medium mb-1.5">
                           Email Address *
                         </label>
                         <input
@@ -159,13 +214,14 @@ export default function ContactPage() {
                           value={formData.email}
                           onChange={handleChange}
                           className="input-field"
-                          placeholder="jane@example.com"
+                          placeholder="e.g. chioma@example.com"
                           required
                         />
                       </div>
                     </div>
+
                     <div>
-                      <label className="block text-xs tracking-wider uppercase text-brand-gray mb-2">
+                      <label className="block text-xs uppercase tracking-wider text-brand-charcoal font-medium mb-1.5">
                         Subject
                       </label>
                       <input
@@ -174,26 +230,32 @@ export default function ContactPage() {
                         value={formData.subject}
                         onChange={handleChange}
                         className="input-field"
-                        placeholder="How can we help?"
+                        placeholder="e.g. Sizing enquiry for Ankara Maxi Dress"
                       />
                     </div>
+
                     <div>
-                      <label className="block text-xs tracking-wider uppercase text-brand-gray mb-2">
+                      <label className="block text-xs uppercase tracking-wider text-brand-charcoal font-medium mb-1.5">
                         Message *
                       </label>
                       <textarea
                         name="message"
                         value={formData.message}
                         onChange={handleChange}
-                        rows={6}
+                        rows={5}
                         className="input-field resize-none"
-                        placeholder="Tell us more..."
+                        placeholder="How can we assist you today?"
                         required
                       />
                     </div>
-                    <button type="submit" disabled={busy} className="btn-primary w-full sm:w-auto">
-                      <Send size={16} className="mr-2" />
-                      Send Message
+
+                    <button
+                      type="submit"
+                      disabled={busy}
+                      className="btn-primary w-full sm:w-auto inline-flex items-center justify-center min-w-[160px]"
+                    >
+                      <Send size={15} className="mr-2" />
+                      {busy ? 'Sending…' : 'Send Message'}
                     </button>
                   </form>
                 </div>
@@ -201,20 +263,6 @@ export default function ContactPage() {
             </div>
           </div>
         </div>
-      </section>
-
-      {/* Map */}
-      <section className="h-80 lg:h-96 bg-brand-beige">
-        <iframe
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.9663095343008!2d-74.00425878428698!3d40.74076904379132!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c259bf5c1654f3%3A0xc80f9cfce5383d5d!2sGoogle!5e0!3m2!1sen!2sus!4v1586000412513!5m2!1sen!2sus"
-          width="100%"
-          height="100%"
-          style={{ border: 0 }}
-          allowFullScreen=""
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-          title="NOBELLE Location"
-        />
       </section>
     </div>
   );

@@ -28,7 +28,15 @@ export default function HomePage() {
     .map((id) => activeProducts.find((p) => p.id === id))
     .filter(Boolean)
     .slice(0, 4);
-  const featuredFallBack = featured.length > 0 ? featured : activeProducts.slice(0, 4);
+  const featuredFallBack = featured.length > 0
+    ? featured
+    : (activeProducts.filter(p => p.featured || p.isFeatured).length > 0
+      ? activeProducts.filter(p => p.featured || p.isFeatured).slice(0, 4)
+      : activeProducts.slice(0, 4));
+
+  const newArrivals = activeProducts.filter(p => p.isNewArrival).length > 0
+    ? activeProducts.filter(p => p.isNewArrival).slice(0, 4)
+    : (activeProducts.length > 4 ? activeProducts.slice(4, 8) : activeProducts.slice(0, 4));
   const heroImage = home.heroImage || '';
 
   return (
@@ -195,7 +203,7 @@ export default function HomePage() {
             </p>
           ) : (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-              {activeProducts.slice(0, 4).map((product, i) => (
+              {(newArrivals.length > 0 ? newArrivals : activeProducts.slice(0, 4)).map((product, i) => (
                 <ProductCard key={product.id} product={product} index={i} />
               ))}
             </div>
